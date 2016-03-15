@@ -23,7 +23,7 @@ class ProfileAdmin extends Admin
 {
 
     /**
-     * @var LinkManagerInterface
+     * @var ProfileManagerInterface
      */
     protected $profileManager;
     protected $maxPerPage = 30;
@@ -35,18 +35,14 @@ class ProfileAdmin extends Admin
      */
     protected $datagridValues = array(
         '_page' => 1,
-        '_per_page' => 320,
+        '_per_page' => 28,
         '_sort_order' => 'DESC',
     );
 
     protected function configureRoutes(RouteCollection $collection)
     {
-        // on top
-        $collection->add('crawl-indexes', 'crawl-indexes');
-        $collection->add('crawl-links', 'crawl-links');
-        $collection->add('crawl-url', 'crawl-url');
         // on list
-        $collection->add('crawl-link', $this->getRouterIdParameter() . '/crawl');
+        $collection->add('crawl-index', $this->getRouterIdParameter() . '/crawl-index');
     }
 
     /**
@@ -113,6 +109,14 @@ class ProfileAdmin extends Admin
             ->add('processed', null, array('editable' => false))
             ->add('lastProcessedAt')
             ->add('lastProcessedStatus')
+            /*       custom actions     */
+            ->add('_action', 'crawl', array(
+                'actions' => array(
+                    'Crawl Index' => array(
+                        'template' => 'NzCrawlerBundle:CRUD:list__action_crawl_index.html.twig'
+                    )
+                )
+            ))
             
         ;
     }
