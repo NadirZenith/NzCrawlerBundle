@@ -1,6 +1,6 @@
 <?php
 
-namespace Nz\CrawlerBundle\Controller;
+namespace Nz\CrawlerBundle\Controller\CRUD;
 
 use Sonata\AdminBundle\Controller\CRUDController as Controller;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -12,7 +12,7 @@ use Nz\CrawlerBundle\Clients;
  *
  * @author  nz
  */
-class LinkCRUDController extends Controller
+class LinkController extends Controller
 {
 
     /**

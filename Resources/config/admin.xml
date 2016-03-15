@@ -6,8 +6,11 @@
 
     <parameters>
         <parameter key="nz.crawler.admin.link.class">Nz\CrawlerBundle\Admin\LinkAdmin</parameter>
-        <!--<parameter key="nz.crawler.admin.link.controller">SonataAdminBundle:CRUD</parameter>-->
-        <parameter key="nz.crawler.admin.link.controller">NzCrawlerBundle:LinkCRUD</parameter>
+        <parameter key="nz.crawler.admin.link.controller">NzCrawlerBundle:CRUD:Link</parameter>
+
+        <parameter key="nz.crawler.admin.profile.class">Nz\CrawlerBundle\Admin\LinkAdmin</parameter>
+        <parameter key="nz.crawler.admin.profile.controller">NzCrawlerBundle:CRUD:Profile</parameter>
+        
         <parameter key="nz.crawler.admin.translation_domain">NzCrawlerBundle</parameter>
     </parameters>
     
@@ -17,10 +20,25 @@
             <argument />
             <argument>%nz.crawler.manager.link.entity%</argument>
             <argument>%nz.crawler.admin.link.controller%</argument>
-            <!--
-            -->
+
             <call method="setLinkManager">
                 <argument type="service" id="nz.crawler.link.manager" />
+            </call>
+
+            <call method="setTranslationDomain">
+                <argument>%nz.crawler.admin.translation_domain%</argument>
+            </call>
+
+        </service>   
+        
+        <service id="nz.crawler.admin.profile" class="%nz.crawler.admin.profile.class%">
+            <tag name="sonata.admin" manager_type="orm" group="nz_crawler" label="profiles"  label_catalogue="%nz.crawler.admin.translation_domain%" label_translator_strategy="sonata.admin.label.strategy.underscore" />
+            <argument />
+            <argument>%nz.crawler.manager.profile.entity%</argument>
+            <argument>%nz.crawler.admin.profile.controller%</argument>
+
+            <call method="setProfileManager">
+                <argument type="service" id="nz.crawler.profile.manager" />
             </call>
 
             <call method="setTranslationDomain">
