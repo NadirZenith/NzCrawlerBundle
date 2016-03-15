@@ -123,7 +123,7 @@ class ProfileAdmin extends Admin
 
     /**
      */
-    public function setLinkManager(ProfileManagerInterface $profileManager)
+    public function setProfileManager(ProfileManagerInterface $profileManager)
     {
         $this->profileManager= $profileManager;
     }

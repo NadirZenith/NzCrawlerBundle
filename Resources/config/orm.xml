@@ -6,11 +6,18 @@
     <parameters>
         <parameter key="nz.crawler.manager.link.class">Nz\CrawlerBundle\Entity\LinkManager</parameter>
         <parameter key="nz.crawler.manager.link.entity">Nz\CrawlerBundle\Entity\Link</parameter>
+        
+        <parameter key="nz.crawler.manager.profile.class">Nz\CrawlerBundle\Entity\ProfileManager</parameter>
+        <parameter key="nz.crawler.manager.profile.entity">Nz\CrawlerBundle\Entity\Profile</parameter>
     </parameters>
 
     <services>
         <service id="nz.crawler.link.manager" class="%nz.crawler.manager.link.class%">
             <argument>%nz.crawler.manager.link.entity%</argument>
+            <argument type="service" id="doctrine" />
+        </service>
+        <service id="nz.crawler.profile.manager" class="%nz.crawler.manager.profile.class%">
+            <argument>%nz.crawler.manager.profile.entity%</argument>
             <argument type="service" id="doctrine" />
         </service>
 
