@@ -71,8 +71,8 @@ class ProfileAdmin extends Admin
     protected function configureFormFields(FormMapper $formMapper)
     {
         $formMapper
-            ->with('Option', array(
-                'class' => 'col-md-8',
+            ->with('Main', array(
+                'class' => 'col-md-10',
             ))
                 ->add('name')
                 ->add('config', 'sonata_simple_formatter_type', array(
@@ -82,8 +82,16 @@ class ProfileAdmin extends Admin
                     )
                         
                 ))
+            ->end()
+            ->with('Option', array(
+                'class' => 'col-md-2',
+            ))
                 ->add('processed')
                 ->add('enabled')
+            ->end()
+            ->with('Status', array(
+                'class' => 'col-md-2',
+            ))
                 ->add('lastProcessedAt')
                 ->add('lastProcessedStatus')
             ->end()
