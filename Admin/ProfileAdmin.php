@@ -11,16 +11,13 @@
 
 namespace Nz\CrawlerBundle\Admin;
 
-use Knp\Menu\ItemInterface as MenuItemInterface;
 use Sonata\AdminBundle\Admin\Admin;
-use Sonata\AdminBundle\Admin\AdminInterface;
 use Sonata\AdminBundle\Datagrid\DatagridMapper;
 use Sonata\AdminBundle\Datagrid\ListMapper;
 use Sonata\AdminBundle\Form\FormMapper;
 use Sonata\AdminBundle\Show\ShowMapper;
 use Nz\CrawlerBundle\Model\ProfileManagerInterface;
 use Sonata\AdminBundle\Route\RouteCollection;
-use Symfony\Component\Form\CallbackTransformer;
 
 class ProfileAdmin extends Admin
 {

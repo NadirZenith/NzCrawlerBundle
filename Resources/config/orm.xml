@@ -16,6 +16,7 @@
             <argument>%nz.crawler.manager.link.entity%</argument>
             <argument type="service" id="doctrine" />
         </service>
+        
         <service id="nz.crawler.profile.manager" class="%nz.crawler.manager.profile.class%">
             <argument>%nz.crawler.manager.profile.entity%</argument>
             <argument type="service" id="doctrine" />
