@@ -19,7 +19,6 @@
     "require": {
         "php": ">=5.3.3",
         "symfony/symfony": "~2.3|~3.0",
-        "fabpot/goutte": "dev-master",
         "symfony/dom-crawler": "~2.1",
         "symfony/css-selector": "~2.1"
     },
