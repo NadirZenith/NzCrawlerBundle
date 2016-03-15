@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping" xsi="http://www.w3.org/2001/XMLSchema-instance" schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    
+    <entity
+        name="Nz\CrawlerBundle\Entity\Profile"
+        table="nz__crawler_profile"
+        repository-class="Nz\CrawlerBundle\Entity\ProfileRepository">
+
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+        
+        <field name="name"        type="string"    column="name" />
+        
+        <field name="config"        type="string"    column="config" />
+
+        <field name="processed"     type="boolean"   column="processed"       default="false" />
+
+        <field name="enabled"          type="boolean"   column="enabled"         default="false" />
+
+        <field name="lastProcessedAt"     type="datetime"  column="last_processed_at" />
+        
+        <field name="lastProcessedStatus" type="string"   column="last_processed_status"  />
+        
+    </entity>
+    
+</doctrine-mapping>
