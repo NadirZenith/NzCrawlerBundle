@@ -1,0 +1,29 @@
+{
+    "name": "nz/crawler-bundle",
+    "type": "symfony-bundle",
+    "description": "Crawler bundle for symfony with sonata support",
+    "homepage": "https://nzlab.es",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nadir Zenith",
+            "email": "2cb.md2@gmail.com",
+            "homepage": "https://nzlab.es"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Nz\\CrawlerBundle\\": ""
+        }
+    },
+    "require": {
+        "php": ">=5.3.3",
+        "symfony/symfony": "~2.3|~3.0",
+        "fabpot/goutte": "dev-master",
+        "symfony/dom-crawler": "~2.1",
+        "symfony/css-selector": "~2.1"
+    },
+    "suggest": {
+        "sonata-project/admin-bundle": "~2.3"
+    }
+}

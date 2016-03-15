@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <parameters>
+        <parameter key="nz.crawler.admin.link.class">Nz\CrawlerBundle\Admin\LinkAdmin</parameter>
+        <!--<parameter key="nz.crawler.admin.link.controller">SonataAdminBundle:CRUD</parameter>-->
+        <parameter key="nz.crawler.admin.link.controller">NzCrawlerBundle:LinkCRUD</parameter>
+        <parameter key="nz.crawler.admin.translation_domain">NzCrawlerBundle</parameter>
+    </parameters>
+    
+    <services>
+        <service id="nz.crawler.admin.link" class="%nz.crawler.admin.link.class%">
+            <tag name="sonata.admin" manager_type="orm" group="nz_crawler" label="links"  label_catalogue="%nz.crawler.admin.translation_domain%" label_translator_strategy="sonata.admin.label.strategy.underscore" />
+            <argument />
+            <argument>%nz.crawler.manager.link.entity%</argument>
+            <argument>%nz.crawler.admin.link.controller%</argument>
+            <!--
+            -->
+            <call method="setLinkManager">
+                <argument type="service" id="nz.crawler.link.manager" />
+            </call>
+
+            <call method="setTranslationDomain">
+                <argument>%nz.crawler.admin.translation_domain%</argument>
+            </call>
+
+        </service>   
+    </services>
+</container>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping" xsi="http://www.w3.org/2001/XMLSchema-instance" schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    
+    <entity
+        name="Nz\CrawlerBundle\Entity\Link"
+        table="nz__crawler_link"
+        repository-class="Nz\CrawlerBundle\Entity\LinkRepository">
+
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO"/>
+        </id>
+        
+        <field name="url"           type="string"    column="crawled_url"     unique="true"/>
+
+        <field name="processed"     type="boolean"   column="processed"       default="false" />
+        
+        <field name="hasError"      type="boolean"   column="has_error"       default="false" />
+        
+        <field name="skip"          type="boolean"   column="skip"            default="false" />
+        
+        <field name="notes"         type="json"      column="note"            nullable="true"  />
+
+        <field name="crawledAt"     type="datetime"  column="crawled_at" />
+
+    </entity>
+    
+</doctrine-mapping>
