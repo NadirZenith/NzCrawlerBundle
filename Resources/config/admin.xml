@@ -6,10 +6,10 @@
 
     <parameters>
         <parameter key="nz.crawler.admin.link.class">Nz\CrawlerBundle\Admin\LinkAdmin</parameter>
-        <parameter key="nz.crawler.admin.link.controller">NzCrawlerBundle:CRUD:Link</parameter>
+        <parameter key="nz.crawler.admin.link.controller">NzCrawlerBundle:CRUD/Link</parameter>
 
         <parameter key="nz.crawler.admin.profile.class">Nz\CrawlerBundle\Admin\ProfileAdmin</parameter>
-        <parameter key="nz.crawler.admin.profile.controller">NzCrawlerBundle:CRUD:Profile</parameter>
+        <parameter key="nz.crawler.admin.profile.controller">NzCrawlerBundle:CRUD/Profile</parameter>
         
         <parameter key="nz.crawler.admin.translation_domain">NzCrawlerBundle</parameter>
     </parameters>

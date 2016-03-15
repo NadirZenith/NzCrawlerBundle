@@ -75,7 +75,13 @@ class ProfileAdmin extends Admin
                 'class' => 'col-md-8',
             ))
                 ->add('name')
-                ->add('config','textarea')
+                ->add('config', 'sonata_simple_formatter_type', array(
+                    'format' => 'markdown',
+                    'attr'=> array(
+                        'style' => 'min-height:350px'
+                    )
+                        
+                ))
                 ->add('processed')
                 ->add('enabled')
                 ->add('lastProcessedAt')

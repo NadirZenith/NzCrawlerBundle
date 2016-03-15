@@ -12,7 +12,7 @@
         
         <field name="name"        type="string"    column="name" />
         
-        <field name="config"        type="string"    column="config" />
+        <field name="config"        type="text"    column="config" />
 
         <field name="processed"     type="boolean"   column="processed"       default="false" />
 
