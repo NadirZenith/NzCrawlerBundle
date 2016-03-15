@@ -90,7 +90,7 @@ class ProfileAdmin extends Admin
                 ->add('enabled')
             ->end()
             ->with('Status', array(
-                'class' => 'col-md-2',
+                'class' => 'col-md-10',
             ))
                 ->add('lastProcessedAt')
                 ->add('lastProcessedStatus')
