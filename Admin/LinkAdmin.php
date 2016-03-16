@@ -144,7 +144,6 @@ class LinkAdmin extends Admin
     }
 
     /**
-     * @param OptionManagerInterface $optionManager
      */
     public function setLinkManager(LinkManagerInterface $linkManager)
     {

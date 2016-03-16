@@ -17,11 +17,21 @@ use Sonata\AdminBundle\Datagrid\ListMapper;
 use Sonata\AdminBundle\Form\FormMapper;
 use Sonata\AdminBundle\Show\ShowMapper;
 use Nz\CrawlerBundle\Model\ProfileManagerInterface;
+use Nz\CrawlerBundle\Model\LinkManagerInterface;
 use Sonata\AdminBundle\Route\RouteCollection;
+use Sonata\CoreBundle\Validator\ErrorElement;
+use Symfony\Component\Yaml\Parser;
+use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Config\Definition\Processor;
+use Nz\CrawlerBundle\Client\Configuration;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 class ProfileAdmin extends Admin
 {
-
+/**
+     * @var LinkManagerInterface
+     */
+    protected $linkManager;
     /**
      * @var ProfileManagerInterface
      */
@@ -43,6 +53,7 @@ class ProfileAdmin extends Admin
     {
         // on list
         $collection->add('crawl-index', $this->getRouterIdParameter() . '/crawl-index');
+        $collection->add('crawl-entity', $this->getRouterIdParameter() . '/crawl-entity');
     }
 
     /**
@@ -73,10 +84,9 @@ class ProfileAdmin extends Admin
                 ->add('name')
                 ->add('config', 'sonata_simple_formatter_type', array(
                     'format' => 'markdown',
-                    'attr'=> array(
+                    'attr' => array(
                         'style' => 'min-height:350px'
                     )
-                        
                 ))
             ->end()
             ->with('Option', array(
@@ -92,7 +102,6 @@ class ProfileAdmin extends Admin
                 ->add('lastProcessedStatus')
             ->end()
         ;
-        
     }
 
     /**
@@ -103,7 +112,7 @@ class ProfileAdmin extends Admin
 
         $listMapper
             ->addIdentifier('name', null, array(
-                /*'template' => 'NzCrawlerBundle:CRUD:list__identifier.html.twig'*/
+                /* 'template' => 'NzCrawlerBundle:CRUD:list__identifier.html.twig' */
             ))
             ->add('enabled', null, array('editable' => true))
             ->add('processed', null, array('editable' => false))
@@ -117,7 +126,7 @@ class ProfileAdmin extends Admin
                     )
                 )
             ))
-            
+
         ;
     }
 
@@ -137,9 +146,48 @@ class ProfileAdmin extends Admin
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function validate(ErrorElement $errorElement, $profile)
+    {
+        try {
+            $parser = new Parser();
+            $config = $parser->parse($profile->getConfig());
+
+            // Use a Symfony ConfigurationInterface object to specify the *.yml format
+            $yamlConfiguration = new Configuration();
+            // Process the configuration files (merge one-or-more *.yml files)
+            $processor = new Processor();
+            $processor->processConfiguration(
+                $yamlConfiguration, array($config) // As many *.yml files as required
+            );
+        } catch (ParseException $ex) {
+
+            $errorElement->addViolation(sprintf('Invalid YML: %s ', $ex->getMessage()));
+        } catch (InvalidConfigurationException $ex) {
+            $errorElement->addViolation(sprintf('Invalid Configuration: %s', $ex->getMessage()));
+        }
+    }
+
+    /**
      */
     public function setProfileManager(ProfileManagerInterface $profileManager)
     {
-        $this->profileManager= $profileManager;
+        $this->profileManager = $profileManager;
+    }
+    
+    /**
+     * @param LinkManagerInterface $linkManager
+     */
+    public function setLinkManager(LinkManagerInterface $linkManager)
+    {
+        $this->linkManager = $linkManager;
+    }
+    /**
+     * @param LinkManagerInterface $linkManager
+     */
+    public function getLinkManager()
+    {
+        return $this->linkManager ;
     }
 }

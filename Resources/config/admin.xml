@@ -37,6 +37,9 @@
             <argument>%nz.crawler.manager.profile.entity%</argument>
             <argument>%nz.crawler.admin.profile.controller%</argument>
 
+            <call method="setLinkManager">
+                <argument type="service" id="nz.crawler.link.manager" />
+            </call>
             <call method="setProfileManager">
                 <argument type="service" id="nz.crawler.profile.manager" />
             </call>
