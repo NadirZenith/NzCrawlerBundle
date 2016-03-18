@@ -136,7 +136,21 @@ abstract class BaseIndexClient extends BaseClient implements IndexClientInterfac
 
     public function filterUrls($urls)
     {
-        return $urls;
+
+        $new_urls = [];
+        foreach ($urls as $url => $title) {
+            //skip unwanted links
+            if ($this->contains($url, $this->stringsToFilter())) {
+                continue;
+            }
+
+            //if relative url prepend domain
+            if (FALSE === strpos($url, $this->base_domain)) {
+                $url = rtrim($this->base_domain, '/') . $url;
+            }
+            $new_urls[$url] = $title;
+        }
+        return array_reverse($new_urls);
     }
 
     abstract public function getNextPageUrl($current_page);
