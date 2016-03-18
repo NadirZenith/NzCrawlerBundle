@@ -38,6 +38,7 @@ class Configuration implements ConfigurationInterface
                     ->children()
                         ->scalarNode('service')->info('...')->cannotBeEmpty()->defaultValue('nz.migration.wp.user_default')->end()
                         ->scalarNode('baseurl')->info('Src Entity')->cannotBeEmpty()->defaultValue('\Nz\WordpressBundle\Entity\User')->end()
+                        ->scalarNode('base_domain')->info('Base domain to prepend to relative paths')->cannotBeEmpty()->end()
                         ->scalarNode('link_filter_selector')->info('..')->cannotBeEmpty()->end()
                         ->scalarNode('logo_url')->info('profile logo url')->defaultValue(false)->end()
                         ->scalarNode('logo_selector')->info('profile logo url selector')->defaultValue(false)->end()

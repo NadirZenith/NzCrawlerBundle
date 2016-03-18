@@ -15,6 +15,13 @@ abstract class BaseIndexClient extends BaseClient implements IndexClientInterfac
     protected $baseurl;
 
     /**
+     * The base domain
+     *
+     * @var string
+     */
+    protected $base_domain;
+
+    /**
      * The current page
      *
      * @var int
@@ -87,7 +94,8 @@ abstract class BaseIndexClient extends BaseClient implements IndexClientInterfac
      */
     protected function getNextIndexUrls()
     {
-
+        //use next page link if it exixt
+        //fallback to get next page url
         $nextUrl = $this->next_page_link ? //
             $this->next_page_link : //
             $this->getNextPageUrl($this->start_page);
@@ -98,6 +106,7 @@ abstract class BaseIndexClient extends BaseClient implements IndexClientInterfac
 
         //if has next selector
         if ($this->next_page_selector) {
+            //get next page link from current crawler
             $link = $crawler->filter($this->next_page_selector);
             if ($link->count() > 0) {
                 $link = $link->attr('href');
@@ -111,6 +120,7 @@ abstract class BaseIndexClient extends BaseClient implements IndexClientInterfac
 
         $index_urls = $crawler->filter($this->index_link_filter);
 
+        //build url => text array 
         $urls = [];
         foreach ($index_urls as $index_url) {
             $item = new Crawler($index_url);
