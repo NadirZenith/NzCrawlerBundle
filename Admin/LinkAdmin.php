@@ -153,17 +153,17 @@ class LinkAdmin extends Admin
         $persist = $this->getRequest()->get('persist', false);
         $uri = $this->generateUrl($action, array_merge($request->attributes->get('_route_params'), array('persist' => !$persist)));
         $style = 'background-color:%s';
-        $menu->addChild($persist ? 'Persisting' : 'Testing', [
+        $menu->addChild($persist ? $this->trans('sidemenu.link_persisting') : $this->trans('sidemenu.link_testing'), [
             'uri' => $uri,
             'attributes' => array(
                 'style' => sprintf($style, $persist ? 'orangered' : 'greenyellow')
             )
         ]);
         if ('list' === $action) {
-            $menu->addChild('Crawl Clients Index', [
+            $menu->addChild($this->trans('sidemenu.link_crawl_indexes'), [
                 'uri' => $this->generateUrl('crawl-indexes'),
             ]);
-            $menu->addChild('Crawl All Links', [
+            $menu->addChild($this->trans('sidemenu.link_crawl_links'), [
                 'uri' => $this->generateUrl('crawl-links'),
             ]);
         }

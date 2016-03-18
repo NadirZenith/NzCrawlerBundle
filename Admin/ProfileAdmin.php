@@ -172,7 +172,7 @@ class ProfileAdmin extends Admin
         $persist = $this->getRequest()->get('persist', false);
         $uri = $this->generateUrl($action, array_merge($request->attributes->get('_route_params'), array('persist' => !$persist)));
         $style = 'background-color:%s';
-        $menu->addChild($persist ? 'Persisting' : 'Testing', [
+        $menu->addChild($persist ? $this->trans('sidemenu.link_persisting') : $this->trans('sidemenu.link_testing'), [
             'uri' => $uri,
             'attributes' => array(
                 'style' => sprintf($style, $persist ? 'orangered' : 'greenyellow')
@@ -180,13 +180,14 @@ class ProfileAdmin extends Admin
         ]);
 
         if ('edit' === $action) {
-            $menu->addChild('Crawl Links', [
+            $menu->addChild($this->trans('sidemenu.link_crawl_index'), [
+
+                'uri' => $this->generateUrl('crawl-index', array('id' => $this->getSubject()->getId()))
+            ]);
+            $menu->addChild($this->trans('sidemenu.link_crawl_links'), [
                 'uri' => $this->generateUrl('crawl-links', array('id' => $this->getSubject()->getId())),
                 'attributes' => array(
                 )
-            ]);
-            $menu->addChild('Crawl Index', [
-                'uri' => $this->generateUrl('crawl-index', array('id' => $this->getSubject()->getId()))
             ]);
         }
     }
