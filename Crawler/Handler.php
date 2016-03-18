@@ -26,7 +26,7 @@ class Handler extends BaseHandler implements HandlerInterface
 
         while ($urls = $client->getUrls()) {
 
-            foreach ($urls as $url) {
+            foreach ($urls as $url => $title) {
                 $link = new Link();
 
                 $link->setUrl($url);
