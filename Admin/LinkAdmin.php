@@ -169,6 +169,16 @@ class LinkAdmin extends Admin
         }
     }
 
+    public function getPersistentParameters()
+    {
+        if (!$this->getRequest()) {
+            return array();
+        }
+        return array(
+            'persist' => $this->getRequest()->get('persist', false)
+        );
+    }
+
     /**
      */
     public function setLinkManager(LinkManagerInterface $linkManager)
