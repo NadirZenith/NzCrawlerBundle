@@ -54,14 +54,14 @@ abstract class BaseIndexClient extends BaseClient implements IndexClientInterfac
      *
      * @var string
      */
-    protected $next_page_selector;
+    protected $next_page_selector = false;
 
     /**
      * The next page link
      *
      * @var string
      */
-    protected $next_page_link;
+    protected $next_page_link = false;
 
     /**
      * Get Current page num
