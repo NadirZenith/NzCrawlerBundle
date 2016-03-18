@@ -22,7 +22,7 @@ class ClientPool
      */
     public function addIndexClient(IndexClientInterface $client)
     {
-        $this->clients['index'][$client->getHost()] = $client;
+        $this->clients['index'][$client->getName()] = $client;
     }
 
     /**
@@ -42,7 +42,7 @@ class ClientPool
      */
     public function addEntityClient(EntityClientInterface $client)
     {
-        $this->clients['entity'][$client->getHost()] = $client;
+        $this->clients['entity'][$client->getName()] = $client;
     }
 
     /**
@@ -64,22 +64,22 @@ class ClientPool
     }
 
     /**
-     * @param string $host host
+     * @param string $name host
      * 
      * @return EntityClientInterface | false EntityClient for provided link of false on no match
      */
-    public function getIndexClientForHost($host)
+    public function getIndexClientForHost($name)
     {
-        return isset($this->clients['index'][$host]) ? $this->clients['index'][$host] : false;
+        return isset($this->clients['index'][$name]) ? $this->clients['index'][$name] : false;
     }
     /**
-     * @param string $host host
+     * @param string $name host
      * 
      * @return EntityClientInterface | false EntityClient for provided link of false on no match
      */
-    public function getEntityClientForHost($host)
+    public function getEntityClientForHost($name)
     {
-        return isset($this->clients['entity'][$host]) ? $this->clients['entity'][$host] : false;
+        return isset($this->clients['entity'][$name]) ? $this->clients['entity'][$name] : false;
     }
     /**
      * @param string $name

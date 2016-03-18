@@ -25,13 +25,17 @@ use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Config\Definition\Processor;
 use Nz\CrawlerBundle\Client\Configuration;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Sonata\AdminBundle\Admin\AdminInterface;
+use Knp\Menu\ItemInterface as MenuItemInterface;
 
 class ProfileAdmin extends Admin
 {
-/**
+
+    /**
      * @var LinkManagerInterface
      */
     protected $linkManager;
+
     /**
      * @var ProfileManagerInterface
      */
@@ -52,8 +56,14 @@ class ProfileAdmin extends Admin
     protected function configureRoutes(RouteCollection $collection)
     {
         // on list
+        //crawl index config
         $collection->add('crawl-index', $this->getRouterIdParameter() . '/crawl-index');
+        //crawl entity config
         $collection->add('crawl-entity', $this->getRouterIdParameter() . '/crawl-entity');
+        // crawl link(s)
+        $collection->add('crawl-links', $this->getRouterIdParameter() . '/crawl-links');
+        //clone profile
+        $collection->add('clone', $this->getRouterIdParameter() . '/clone');
     }
 
     /**
@@ -78,28 +88,37 @@ class ProfileAdmin extends Admin
     protected function configureFormFields(FormMapper $formMapper)
     {
         $formMapper
+            ->tab('Profile')
             ->with('Main', array(
-                'class' => 'col-md-10',
+                'class' => 'col-md-12',
             ))
-                ->add('name')
-                ->add('config', 'sonata_simple_formatter_type', array(
-                    'format' => 'markdown',
-                    'attr' => array(
-                        'style' => 'min-height:350px'
-                    )
-                ))
-            ->end()
-            ->with('Option', array(
-                'class' => 'col-md-2',
+            ->add('name')
+            ->add('config', 'sonata_simple_formatter_type', array(
+                'format' => 'markdown',
+                'attr' => array(
+                    'style' => 'min-height:350px'
+                )
             ))
-                ->add('processed')
-                ->add('enabled')
             ->end()
             ->with('Status', array(
                 'class' => 'col-md-10',
             ))
-                ->add('lastProcessedAt')
-                ->add('lastProcessedStatus')
+            ->add('lastProcessedAt')
+            ->add('lastProcessedStatus')
+            ->end()
+            ->with('Option', array(
+                'class' => 'col-md-2',
+            ))
+            ->add('processed')
+            ->add('enabled')
+            ->end()
+            ->end()
+            ->tab('crawl')
+            ->with('Status', array(
+                'class' => 'col-md-10',
+            ))
+            ->add('links', 'textarea', ['mapped' => false])
+            ->end()
             ->end()
         ;
     }
@@ -112,17 +131,15 @@ class ProfileAdmin extends Admin
 
         $listMapper
             ->addIdentifier('name', null, array(
-                /* 'template' => 'NzCrawlerBundle:CRUD:list__identifier.html.twig' */
+                'template' => 'NzCrawlerBundle:CRUD:list__profile_identifier.html.twig'
             ))
             ->add('enabled', null, array('editable' => true))
             ->add('processed', null, array('editable' => false))
-            ->add('lastProcessedAt')
-            ->add('lastProcessedStatus')
             /*       custom actions     */
             ->add('_action', 'crawl', array(
                 'actions' => array(
                     'Crawl Index' => array(
-                        'template' => 'NzCrawlerBundle:CRUD:list__action_crawl_index.html.twig'
+                        'template' => 'NzCrawlerBundle:CRUD:list__profile_action.html.twig'
                     )
                 )
             ))
@@ -143,6 +160,45 @@ class ProfileAdmin extends Admin
             ->add('lastProcessedAt')
             ->add('lastProcessedStatus')
         ;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function configureSideMenu(MenuItemInterface $menu, $action, AdminInterface $childAdmin = null)
+    {
+        $request = $this->getRequest();
+
+        $persist = $this->getRequest()->get('persist', false);
+        $uri = $this->generateUrl($action, array_merge($request->attributes->get('_route_params'), array('persist' => !$persist)));
+        $style = 'background-color:%s';
+        $menu->addChild($persist ? 'Persisting' : 'Testing', [
+            'uri' => $uri,
+            'attributes' => array(
+                'style' => sprintf($style, $persist ? 'orangered' : 'greenyellow')
+            )
+        ]);
+
+        if ('edit' === $action) {
+            $menu->addChild('Crawl Links', [
+                'uri' => $this->generateUrl('crawl-links', array('id' => $this->getSubject()->getId())),
+                'attributes' => array(
+                )
+            ]);
+            $menu->addChild('Crawl Index', [
+                'uri' => $this->generateUrl('crawl-index', array('id' => $this->getSubject()->getId()))
+            ]);
+        }
+    }
+
+    public function getPersistentParameters()
+    {
+        if (!$this->getRequest()) {
+            return array();
+        }
+        return array(
+            'persist' => $this->getRequest()->get('persist', false)
+        );
     }
 
     /**
@@ -169,13 +225,41 @@ class ProfileAdmin extends Admin
         }
     }
 
+    public function getProfileConfig($profile)
+    {
+        try {
+            $parser = new Parser();
+            $config = $parser->parse($profile->getConfig());
+        } catch (ParseException $ex) {
+
+            $this->addFlash('sonata_flash_error', sprintf('Invalid YML: %s ', $ex->getMessage()));
+        }
+
+
+        // Use a Symfony ConfigurationInterface object to specify the *.yml format
+        $yamlConfiguration = new Configuration();
+
+        // Process the configuration files (merge one-or-more *.yml files)
+        $processor = new Processor();
+        try {
+            $configuration = $processor->processConfiguration(
+                $yamlConfiguration, array($config) // As many *.yml files as required
+            );
+        } catch (InvalidConfigurationException $ex) {
+
+            $this->addFlash('sonata_flash_error', sprintf('Invalid Configuration: %s ', $ex->getMessage()));
+        }
+
+        return $configuration;
+    }
+
     /**
      */
     public function setProfileManager(ProfileManagerInterface $profileManager)
     {
         $this->profileManager = $profileManager;
     }
-    
+
     /**
      * @param LinkManagerInterface $linkManager
      */
@@ -183,11 +267,12 @@ class ProfileAdmin extends Admin
     {
         $this->linkManager = $linkManager;
     }
+
     /**
      * @param LinkManagerInterface $linkManager
      */
     public function getLinkManager()
     {
-        return $this->linkManager ;
+        return $this->linkManager;
     }
 }

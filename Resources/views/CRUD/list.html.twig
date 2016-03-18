@@ -2,41 +2,17 @@
 {% extends 'SonataAdminBundle:CRUD:base_list.html.twig' %}
 
 {% block tab_menu %}
-<p>
+    {{parent()}}
+    <br>
     <div class="btn-group">
-        <form method="get" action="{{ admin.generateUrl('crawl-indexes') }}" style="display: inline-block">
-            <button type="submit" class="btn btn-default">
-                <i class="fa fa-list"></i>
-                Crawl Clients Index
-            </button>
-            <label for="persist">
-                <input type="checkbox" name="persist" />
-                Persist
-            </label>
-        </form>
-        <form method="get" action="{{ admin.generateUrl('crawl-links') }}" style="display: inline-block">
-            <button type="submit" class="btn btn-default">
-                <i class="fa fa-list"></i>
-                Crawl All Links
-            </button>
-            <label for="persist">
-                <input type="checkbox" name="persist" />
-                Persist
-            </label>
-        </form>
         <form method="get" action="{{ admin.generateUrl('crawl-url') }}">
+            <input type="text" name="url" size="60"/>
             <button type="submit" class="btn btn-default">
                 <i class="fa fa-list"></i>
                 Crawl Url
             </button>
-            <input type="text" name="url" size="60"/>
-            <label for="persist">
-                <input type="checkbox" name="persist" />
-                Persist
-            </label>
         </form>
     </div>
-</p>
 
 {% endblock %}
 

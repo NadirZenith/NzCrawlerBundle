@@ -14,6 +14,7 @@ class LinkRepository extends EntityRepository
         $query = $qb
             ->select('l')
             ->where($qb->expr()->like('l.url', ':host'))
+            ->andWhere('l.processed = false')
             ->setParameter('host', '%' . $host . '%')
             ->getQuery()
         ;

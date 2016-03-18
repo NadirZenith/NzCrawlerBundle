@@ -43,6 +43,20 @@ abstract class BaseIndexClient extends BaseClient implements IndexClientInterfac
     protected $index_link_filter;
 
     /**
+     * The css filter path for next page
+     *
+     * @var string
+     */
+    protected $next_page_selector;
+
+    /**
+     * The next page link
+     *
+     * @var string
+     */
+    protected $next_page_link;
+
+    /**
      * Get Current page num
      *
      * @var int
@@ -74,13 +88,38 @@ abstract class BaseIndexClient extends BaseClient implements IndexClientInterfac
     protected function getNextIndexUrls()
     {
 
-        $nextUrl = $this->getNextPageUrl($this->start_page);
+        $nextUrl = $this->next_page_link ? //
+            $this->next_page_link : //
+            $this->getNextPageUrl($this->start_page);
+
         $this->start_page ++;
         $this->current_page ++;
+        $crawler = $this->getBaseCrawler($nextUrl);
 
-        $index_urls = $this->getBaseCrawler($nextUrl)->filter($this->index_link_filter);
+        //if has next selector
+        if ($this->next_page_selector) {
+            $link = $crawler->filter($this->next_page_selector);
+            if ($link->count() > 0) {
+                $link = $link->attr('href');
+                if (FALSE === strpos($link, $this->baseurl)) {
+                    $this->next_page_link = $this->baseurl . $link;
+                } else {
+                    $this->next_page_link = $link;
+                }
+            }
+        }
 
-        $urls = $this->filterUrls($this->getArrayAttributes($index_urls, 'href'));
+        $index_urls = $crawler->filter($this->index_link_filter);
+
+        $urls = [];
+        foreach ($index_urls as $index_url) {
+            $item = new Crawler($index_url);
+
+            if ($index_url->hasAttribute('href')) {
+                $urls[$index_url->getAttribute('href')] = trim($item->text());
+            }
+        }
+        $urls = $this->filterUrls($urls);
 
         return $urls;
     }

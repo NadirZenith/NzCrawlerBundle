@@ -5,12 +5,10 @@ namespace Nz\CrawlerBundle\Controller\CRUD;
 use Sonata\AdminBundle\Controller\CRUDController as Controller;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Nz\CrawlerBundle\Clients;
-use Symfony\Component\Yaml\Parser;
-use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\Config\Definition\Processor;
-use Nz\CrawlerBundle\Client\Configuration;
-use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+//form
+use Nz\CrawlerBundle\Entity\Link;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 /**
  * Class CRUDController.
@@ -27,7 +25,7 @@ class ProfileController extends Controller
     {
 
         $profile = $this->admin->getSubject();
-        $config = $this->getProfileConfig($profile);
+        $config = $this->admin->getProfileConfig($profile);
 
         if (!is_array($config)) {
             return $config;
@@ -58,19 +56,107 @@ class ProfileController extends Controller
         $this->addFlash('sonata_flash_success', sprintf('New Links: %s <br> %s', count($links), $info));
         $this->addFlash('sonata_flash_error', sprintf('Errors: %s <br> %s', count($errors), $error));
 
-        return new RedirectResponse($this->admin->generateUrl('list'));
+        return new RedirectResponse($this->admin->generateUrl('edit', array('id' => $id)));
+    }
+
+    public function crawlLinksAction($id, Request $request = null)
+    {
+
+        $id = $request->get($this->admin->getIdParameter());
+
+        $object = $this->admin->getObject($id);
+        $persist = $request->get('persist', false);
+
+        if (!$object) {
+            throw $this->createNotFoundException(sprintf('unable to find the object with id : %s', $id));
+        }
+
+        $this->admin->checkAccess('show', $object);
+
+        $preResponse = $this->preShow($request, $object);
+        if ($preResponse !== null) {
+            return $preResponse;
+        }
+
+        $this->admin->setSubject($object);
+
+        /*        */
+
+        // create a task and give it some dummy data for this example
+        $link = new Link();
+        /* $link->setUrl('url here'); */
+        $link->getCrawledAt(new \DateTime('now'));
+
+        $form = $this->createFormBuilder($link)
+            ->add('url', TextType::class)
+            /* ->add('dueDate', DateType::class) */
+            ->add('save', SubmitType::class, array('label' => 'Crawl Link'))
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $config = $this->admin->getProfileConfig($object);
+            /*dd($persist);*/
+            $this->crawlLinkWithConfig($link, $config, $persist);
+            /* d($object); */
+            /* dd($link); */
+            // ... perform some action, such as saving the task to the database
+
+            /* return $this->redirectToRoute('task_success'); */
+            return new RedirectResponse(
+                $this->admin->generateUrl('crawl-links', array('id' => $id))
+            );
+        }
+        /* dd($this->admin->getTemplates()); */
+        /* $datagrid = $this->admin->getDatagrid(); */
+        /* $formView = $datagrid->getForm()->createView(); */
+
+        return $this->render($this->admin->getTemplate('crawl_links'), array(
+                'action' => 'crawl-links',
+                'elements' => $this->admin->getShow(),
+                'object' => $object,
+                'form' => $form->createView(),
+                /* 'form' => $formView, */
+                /* 'datagrid' => $datagrid, */
+                /* 'csrf_token' => $this->getCsrfToken('sonata.batch'), */
+                ), null, $request);
+    }
+
+    public function cloneAction()
+    {
+        $object = $this->admin->getSubject();
+
+        if (!$object) {
+            throw new NotFoundHttpException(sprintf('unable to find the object with id : %s', $id));
+        }
+
+        // Be careful, you may need to overload the __clone method of your object
+        // to set its id to null !
+        $clonedObject = clone $object;
+
+        $clonedObject->setName($object->getName() . ' (Clone)');
+
+        $this->admin->create($clonedObject);
+
+        $this->addFlash('sonata_flash_success', 'Cloned successfully');
+
+        return new RedirectResponse($this->admin->generateUrl('edit', ['id' => $clonedObject->getId()]));
+
+        // if you have a filtered list and want to keep your filters after the redirect
+        // return new RedirectResponse($this->admin->generateUrl('list', $this->admin->getFilterParameters()));
     }
 
     public function crawlEntityAction($id, Request $request = null)
     {
-        include 'nzdebug.php';
         $profile = $this->admin->getSubject();
-        $config = $this->getProfileConfig($profile);
+        $config = $this->admin->getProfileConfig($profile);
         if (!is_array($config)) {
-            return $config;
+            return new RedirectResponse($this->admin->generateUrl('list'));
         }
-        $persist = $request->get('persist', true);
 
+
+        $persist = $request->get('persist', false);
         $handler = $this->getHandler();
         $clientPool = $this->getClientPool();
         $client = $clientPool->getEntityClient('dynamic');
@@ -78,7 +164,7 @@ class ProfileController extends Controller
 
         $linkManager = $this->getLinkManager();
         $links = $linkManager->findFromHost($config['entity']['base_host']);
-        $links = array_splice($links, -5);
+        $links = array_splice($links, -1);
 
         $handler->setEntityClass($config['entity']['target_entity']);
 
@@ -88,6 +174,7 @@ class ProfileController extends Controller
         foreach ($links as $link) {
             $client->setLink($link);
             $entity = $handler->handleEntityClient($client, $persist);
+            dd($entity);
             if (!$entity) {
                 $notes = $link->getNotes();
                 $errors[] = substr(end($notes), 0, 200);
@@ -103,35 +190,24 @@ class ProfileController extends Controller
         dd($entities);
     }
 
-    public function getProfileConfig($profile)
+    private function crawlLinkWithConfig($link, $config, $persist = false)
     {
-        try {
-            $parser = new Parser();
-            $config = $parser->parse($profile->getConfig());
-        } catch (ParseException $ex) {
+        $handler = $this->getHandler();
+        $client = $this->getClientPool()->getEntityClient('dynamic');
+        $client->useConfig($config['entity']);
 
-            $this->addFlash('sonata_flash_error', sprintf('Invalid YML: %s ', $ex->getMessage()));
-            return new RedirectResponse($this->admin->generateUrl('list'));
+        $handler->setEntityClass($config['entity']['target_entity']);
+
+        $client->setLink($link);
+        $entity = $handler->handleEntityClient($client, $persist);
+        if (!$entity) {
+            $notes = $link->getNotes();
+            $error = substr(end($notes), 0, 200);
+            $this->addFlash('sonata_flash_error', sprintf('Error: %s ', $error));
+        } else {
+            $success = method_exists($entity, '__toString') ? $entity : $entity->getId();
+            $this->addFlash('sonata_flash_success', sprintf('Success: %s ', $success));
         }
-
-
-        // Use a Symfony ConfigurationInterface object to specify the *.yml format
-        $yamlConfiguration = new Configuration();
-        /* d($yamlConfiguration->getConfigTreeBuilder()->buildTree()); */
-
-        // Process the configuration files (merge one-or-more *.yml files)
-        $processor = new Processor();
-        try {
-            $configuration = $processor->processConfiguration(
-                $yamlConfiguration, array($config) // As many *.yml files as required
-            );
-        } catch (InvalidConfigurationException $ex) {
-
-            $this->addFlash('sonata_flash_error', sprintf('Invalid Configuration: %s ', $ex->getMessage()));
-            return new RedirectResponse($this->admin->generateUrl('list'));
-        }
-
-        return $configuration;
     }
 
     /**

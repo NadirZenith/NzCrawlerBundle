@@ -105,7 +105,7 @@ abstract class BaseEntityClient extends BaseClient implements EntityClientInterf
      */
     public function crawlToEntity($entity)
     {
-
+        
         $entity_crawler = $this->getBaseCrawler($this->link->getUrl())->filter($this->article_base_filter);
 
         $this->profile_items = [];

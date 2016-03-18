@@ -1,0 +1,17 @@
+
+{% extends 'SonataAdminBundle:CRUD:base_list_field.html.twig' %}
+
+{% block field %}
+    {%set config = admin.profileConfig(object)%}
+
+    {% if config.index.logo_url is defined and config.index.logo_url %}
+        <div class="col-sm-4">
+            <img src={{config.index.logo_url}}>
+        </div>
+    {% endif %}
+    <div class="col-sm-8">
+        <a href="{{ admin.generateUrl('edit', {'id' : object|sonata_urlsafeid }) }}"><strong>{{ object }}</strong></a>
+    </div>
+{% endblock %}
+
+

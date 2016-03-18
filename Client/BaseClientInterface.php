@@ -8,12 +8,12 @@ interface BaseClientInterface
 {
 
     /**
-     * @param string $host Set host this client handle
+     * @param string $name Set client name
      */
-    public function setHost($host);
+    public function setName($name);
 
     /**
-     * @return string Client host
+     * @return string Client name
      */
-    public function getHost();
+    public function getName();
 }

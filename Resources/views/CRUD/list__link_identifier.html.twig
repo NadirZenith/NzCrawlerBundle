@@ -13,20 +13,8 @@ file that was distributed with this source code.
 
 {% block field %}
 
-    <div class="col-sm-8">
-        {#
-        <span class="badge pull-right">{{ object.commentsCount }}</span>
-
-        <strong>{{ object.title }}</strong>
-        <br />
-        #}
+    <div class="col-sm-12">
         <a href="{{ admin.generateUrl('edit', {'id' : object|sonata_urlsafeid }) }}"><strong>{{ object.url }}</strong></a>
-
-
-        {#
-        <div class="small hide2">
-        </div>
-        #}
         <br>
         <a href="#notes-{{object.id}}" class="label label-info" type="button" data-toggle="collapse" aria-expanded="false" aria-controls="notes-{{object.id}}}}">
             notes
@@ -35,10 +23,6 @@ file that was distributed with this source code.
                 <ul class="list-group">
                     {% for type, note in object.notes %}
                         <li class="list-group-item">
-{#                            
-                            {{ type|truncate(150) }} ->
-                            {{ note|truncate(150) }}
-#}
                             {{ type }} ->
                             {{ note  }}
                         </li>
@@ -48,13 +32,4 @@ file that was distributed with this source code.
     </div>
 {% endblock %}
 
-
-{#
-    <ul class="list-group">
-        {% for note, type in object.notes %}
-            <li class="list-group-item">{{type}}:{{ note|e }}</li>
-            {% endfor %}
-    </ul>
-</div>
-#}
 

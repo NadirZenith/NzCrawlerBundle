@@ -9,23 +9,52 @@ abstract class BaseClient implements BaseClientInterface
 {
 
     /**
+     * The client name
+     *
+     * @var string
+     */
+    protected $name;
+
+    /**
      * The host this client handles
      *
      * @var string
      */
     protected $host;
 
-    public function __construct($host)
+    public function __construct($name)
     {
-        $this->setHost($host);
+        $this->setName($name);
     }
 
     /**
-     * @param string $host Set host this client handle
+     * @param string $name Set name
      * 
      * @return Client The client 
      */
-    public function setHost($host)
+    public function setName($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Get client name
+     * 
+     * @return string The client name
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @param string $host Set host
+     * 
+     * @return Client The client 
+     */
+    protected function setHost($host)
     {
         $this->host = $host;
 
@@ -33,11 +62,11 @@ abstract class BaseClient implements BaseClientInterface
     }
 
     /**
-     * Get client host
+     * Get client name
      * 
-     * @return string The client host url
+     * @return string The client name
      */
-    public function getHost()
+    protected function getHost()
     {
         return $this->host;
     }
@@ -61,6 +90,9 @@ abstract class BaseClient implements BaseClientInterface
         if (200 != $status_code) {
             throw new ClientException(sprintf('Request for url: %s, returned with status code: %s', $url, $status_code));
         }
+
+        $parseurl = parse_url($url);
+        $this->setHost(sprintf('%s://%s', $parseurl['scheme'], $parseurl['host']));
 
         return $crawler;
     }

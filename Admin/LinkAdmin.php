@@ -77,15 +77,15 @@ class LinkAdmin extends Admin
             ->with('Option', array(
                 'class' => 'col-md-8',
             ))
-                ->add('url', 'url')
-                ->add('processed')
-                ->add('hasError')
-                ->add('skip')
-                ->add('crawledAt')
-                ->add('notes')
+            ->add('url', 'url')
+            ->add('processed')
+            ->add('hasError')
+            ->add('skip')
+            ->add('crawledAt')
+            ->add('notes')
             ->end()
         ;
-        
+
         $formMapper->getFormBuilder()->get('notes')
             ->addModelTransformer(new CallbackTransformer(
                 function ($dbNotes) {
@@ -112,7 +112,7 @@ class LinkAdmin extends Admin
 
         $listMapper
             ->addIdentifier('url', null, array(
-                'template' => 'NzCrawlerBundle:CRUD:list__identifier.html.twig'
+                'template' => 'NzCrawlerBundle:CRUD:list__link_identifier.html.twig'
             ))
             ->add('processed', null)
             ->add('hasError', null, array('editable' => true))
@@ -121,7 +121,7 @@ class LinkAdmin extends Admin
             ->add('_action', 'crawl', array(
                 'actions' => array(
                     'Crawl' => array(
-                        'template' => 'NzCrawlerBundle:CRUD:list__action_crawl.html.twig'
+                        'template' => 'NzCrawlerBundle:CRUD:list__link_action.html.twig'
                     )
                 )
             ))
@@ -141,6 +141,32 @@ class LinkAdmin extends Admin
             ->add('hasError')
             ->add('skip')
         ;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function configureSideMenu(MenuItemInterface $menu, $action, AdminInterface $childAdmin = null)
+    {
+        $request = $this->getRequest();
+
+        $persist = $this->getRequest()->get('persist', false);
+        $uri = $this->generateUrl($action, array_merge($request->attributes->get('_route_params'), array('persist' => !$persist)));
+        $style = 'background-color:%s';
+        $menu->addChild($persist ? 'Persisting' : 'Testing', [
+            'uri' => $uri,
+            'attributes' => array(
+                'style' => sprintf($style, $persist ? 'orangered' : 'greenyellow')
+            )
+        ]);
+        if ('list' === $action) {
+            $menu->addChild('Crawl Clients Index', [
+                'uri' => $this->generateUrl('crawl-indexes'),
+            ]);
+            $menu->addChild('Crawl All Links', [
+                'uri' => $this->generateUrl('crawl-links'),
+            ]);
+        }
     }
 
     /**
