@@ -4,11 +4,11 @@ namespace Nz\CrawlerBundle\Crawler;
 
 use Nz\CrawlerBundle\Entity\Link;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
-use Nz\CrawlerBundle\Client\IndexClientInterface;
-use Nz\CrawlerBundle\Client\EntityClientInterface;
+use Nz\CrawlerBundle\Client\ClientInterface;
 use Nz\CrawlerBundle\Client\ClientException;
 use Doctrine\DBAL\Exception\NotNullConstraintViolationException;
-use \Buzz\Exception\RequestException;
+use Buzz\Exception\RequestException;
+use Nz\CrawlerBundle\Entity\Profile;
 
 /**
  * Crawl handler
@@ -16,65 +16,103 @@ use \Buzz\Exception\RequestException;
 class Handler extends BaseHandler implements HandlerInterface
 {
 
-    /**
-     * {@inheritdoc}
-     */
-    public function handleIndexClient(IndexClientInterface $client, $persist = false)
+    public function urlsToLinks(array $urls, $persist = false)
     {
-        $this->links = [];
-        $this->errors = [];
+        $this->errors = array();
 
-        while ($urls = $client->getUrls()) {
+        $links = array();
+        foreach ($urls as $key => $value) {
+            $url = is_int($key) ? $value : $key;
+            $title = is_int($key) ? null : $value;
 
-            foreach ($urls as $url => $title) {
+            $link = $this->getEntityManager()->getRepository(Link::class)->findOneBy(['url' => $url]);
+            if ($link) {
+
+                $this->errors[] = new ClientException(sprintf('Duplicate link url: %s', $url));
+            } else {
                 $link = new Link();
-
+                $link->setName($title);
                 $link->setUrl($url);
 
-                $this->links[] = $link;
-
                 if ($persist) {
-
-                    $this->persistLink($link);
+                    $this->getEntityManager()->persist($link);
                 }
+
+                $links[] = $link;
             }
         }
 
-        return $this->links;
+
+        return $links;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function handleEntityClient(EntityClientInterface $client, $persist = false)
+    public function handleIndex(ClientInterface $client, $persist = false)
     {
-        $link = $client->getLink();
+        $links = $this->urlsToLinks($client->getIndexUrls(), $persist);
 
-        $link->setProcessed(true);
+        if ($persist) {
+            $this->getEntityManager()->flush();
+        }
 
-        $this->links[] = $link;
+        return $links;
+    }
 
-        try {
-            $entity = $client->crawlToEntity($this->getNewEntity());
+    /**
+     * {@inheritdoc}
+     */
+    public function handleLinks(ClientInterface $client, array $links, $persist = false)
+    {
+        $this->errors = array();
+        $entities = array();
+        foreach ($links as $link) {
+            $client->resetLink($link);
+
+            $entity = $this->handleLink($client, $persist);
 
             if (!$entity) {
-
-                $link->setHasError(true);
-                $link->setNote('error_crawling_entity', sprintf('entity with error: %s', $entity->getTitle()));
-            } else {
-                $link->setHasError(false);
-                $link->setNote('crawled_entity', sprintf('crawled entity: %s', $entity->getTitle()));
+                continue;
             }
+            $entities[] = $entity;
+        }
+
+        return $entities;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function handleLink(ClientInterface $client, $persist = false)
+    {
+
+        $link = $client->getLink();
+
+        if (!$link) {
+            return false;
+        }
+
+        try {
+
+            $entity = $client->createEntity();
+
+            $client->crawlToEntity($entity);
+            $link->setItems($client->getItems());
+
+            $link->setNote('crawled_entity', sprintf('crawled entity: %s', $entity->getTitle()));
 
             if ($persist) {
+                $link->setProcessed(true);
 
                 $this->persistEntity($entity);
-
-                $link->setNote('created_entity', sprintf('created entity: %d', $entity->getId()));
-                $this->persistLink($link);
-
                 $client->afterEntityPersist($entity);
+                $link->setNote('created_entity', sprintf('created entity: %s:%d', get_class($entity), $entity->getId()));
             }
+
+            $link->setSkip(false);
+            $link->setError(false);
+            $this->persistLink($link);
 
             return $entity;
         } catch (UniqueConstraintViolationException $ex) {
@@ -90,15 +128,13 @@ class Handler extends BaseHandler implements HandlerInterface
 
             $link->setNote('error_requesting_remote', $ex->getMessage());
         } catch (\Exception $ex) {
-
             $link->setNote('exception', $ex->getMessage());
             $link->setSkip(true);
         }
-        $link->setHasError(true);
 
-        if ($persist) {
-            $this->persistLink($link);
-        }
+        $this->errors[] = $ex;
+        $link->setError(true);
+        $this->persistLink($link);
 
         return false;
     }

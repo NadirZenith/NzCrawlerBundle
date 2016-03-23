@@ -12,15 +12,28 @@
     </parameters>
 
     <services>
-        <service id="nz.crawler.link.manager" class="%nz.crawler.manager.link.class%">
+        
+        <service id="nz.crawler.manager.profile" class="%nz.crawler.manager.profile.class%">
+            <argument>%nz.crawler.manager.profile.entity%</argument>
+            <argument type="service" id="doctrine" />
+            
+            <call method="setClientPool">
+                <argument type="service" id="nz.crawler.client.pool" />
+            </call>    
+            
+            <call method="setHandler">
+                <argument type="service" id="nz.crawler.handler" />
+            </call>    
+            <call method="setLinkManager">
+                <argument type="service" id="nz.crawler.manager.link" />
+            </call>    
+        </service>
+        
+        <service id="nz.crawler.manager.link" class="%nz.crawler.manager.link.class%">
             <argument>%nz.crawler.manager.link.entity%</argument>
             <argument type="service" id="doctrine" />
         </service>
         
-        <service id="nz.crawler.profile.manager" class="%nz.crawler.manager.profile.class%">
-            <argument>%nz.crawler.manager.profile.entity%</argument>
-            <argument type="service" id="doctrine" />
-        </service>
 
     </services>
 </container>

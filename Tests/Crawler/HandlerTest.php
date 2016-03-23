@@ -3,171 +3,132 @@
 namespace Nz\CrawlerBundle\Tests\Crawler;
 
 use Nz\CrawlerBundle\Crawler\Handler;
-use Nz\CrawlerBundle\Client\BaseIndexClient;
-use Nz\CrawlerBundle\Client\BaseEntityClient;
 use Nz\CrawlerBundle\Entity\Link;
+use Nz\CrawlerBundle\Tests\Client\ExampleClient;
 use Symfony\Component\DomCrawler\Crawler;
+use Nz\CrawlerBundle\Tests\Client\LinkModel_Test;
 
 /**
  */
 class HandlerTest extends \PHPUnit_Framework_TestCase
 {
 
-    private function getIndexClient()
+    private function getLink()
     {
-        return new TestIndexClient();
+        $link = new LinkModel_Test();
+        $link->setUrl('http://www.nzlab.es/test-url');
+
+        return $link;
     }
 
-    private function getEntityClient()
+    private function getMockCrawler($content)
     {
-        $entity_client = new TestEntityClient('nzlab.es');
-
-        $link = new Link();
-        $link->setUrl('http://www.nzlab.es/blog/use-composer-without-packagist');
-
-        $entity_client->setLink($link);
-
-        return $entity_client;
+        return $this->getMockBuilder('Symfony\Component\DomCrawler\Crawler')
+                ->setConstructorArgs(array($content))
+                /* ->setConstructorArgs(array(file_get_contents(__DIR__ . '/../data/index_example.html'), 'http://example.com/', 'http://example.com/')) */
+                ->setMethods(null)
+                ->getMock();
     }
 
-    public function testHandleIndexClient()
+    private function getMockClient()
     {
-        $mr = $this->getMock('\Doctrine\Common\Persistence\ManagerRegistry');
-        $index = $this->getIndexClient();
-        $handler = new Handler($mr);
+        $mediaMatcher = $this->getMockBuilder('Nz\CrawlerBundle\Crawler\MediaMatcher')
+            ->disableOriginalConstructor()
+            ->setMethods(null)
+            ->getMock();
+
+        $client = $this->getMockBuilder('Nz\CrawlerBundle\Tests\Client\ExampleClient')
+            ->setConstructorArgs(array('client-name', $mediaMatcher))
+            /* ->setMethods(null) */
+            ->setMethods(array('crawl'))
+            /* ->setMethods(array('crawl', 'afterEntityPersist')) */
+            ->getMock();
 
 
-        $links = $handler->handleIndexClient($index);
+        $client->configure($this->getLink());
+
+        return $client;
+    }
+
+    private function getMockHandler()
+    {
+        //EntityRepository
+        $er = $this->getMockBuilder('\Doctrine\ORM\EntityRepository')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        //EntityManager
+        $em = $this->getMockBuilder('\Doctrine\ORM\EntityManager')
+            ->disableOriginalConstructor()
+            ->getMock();
+        $em->method("isOpen")->will($this->returnValue(true));
+        $em->method("getRepository")->will($this->returnValue($er));
+
+        //ManagerRegistry
+        $mr = $this->getMockBuilder('Doctrine\Common\Persistence\ManagerRegistry')
+            /* ->setMethods(['getManager']) */
+            ->getMock();
+        $mr->method("getManager")->will($this->returnValue($em));
+
+
+        $handler = $this->getMockBuilder('Nz\CrawlerBundle\Crawler\Handler')
+            ->setConstructorArgs(array($mr))
+            ->setMethods(null)
+            ->getMock();
+
+        return $handler;
+    }
+
+    public function testHandleIndex()
+    {
+        $handler = $this->getMockHandler();
+        $client = $this->getMockClient();
+
+        $crawler = $this->getMockCrawler(file_get_contents(__DIR__ . '/../data/index_example.html'));
+        $client->expects($this->at(0))->method("crawl")->will($this->returnValue($crawler));
+        $crawler = $this->getMockCrawler(file_get_contents(__DIR__ . '/../data/index_example_page_2.html'));
+        $client->expects($this->at(1))->method("crawl")->will($this->returnValue($crawler));
+
+        $links = $handler->handleIndex($client);
+
         $this->assertNotEmpty($links);
-    }
+        $this->assertEquals(count($links), 5);
 
-    public function testHandleEntityClient()
-    {
-        $mr = $this->getMock('\Doctrine\Common\Persistence\ManagerRegistry');
-        $entity_client = $this->getEntityClient();
-        $handler = new Handler($mr);
-        $handler->setEntityClass(TestEntity::class);
-
-        $entity = $handler->handleEntityClient($entity_client);
-        $this->assertEquals($entity->getTitle(), 'Use composer without packagist');
-        $this->assertEmpty($handler->getErrors());
-        $this->assertTrue($entity_client->getLink()->getProcessed());
-        $this->assertFalse($entity_client->getLink()->getHasError());
-        $this->assertFalse($entity_client->getLink()->getSkip());
-    }
-}
-
-/**
- * index client for test ok
- */
-class TestIndexClient extends BaseIndexClient
-{
-
-    protected $start_page = 1;
-    protected $limit_pages = 1;
-
-    function __construct()
-    {
-        $this->baseurl = 'http://www.ainanas.com/';
-
-        $this->index_link_filter = 'body div#content a.post_title';
-    }
-
-    public function getNextPageUrl($current_page)
-    {
-        $url = $this->baseurl . 'page/' . $current_page;
-        return $url;
-    }
-}
-
-/**
- * Entity client for test ok
- */
-class TestEntityClient extends BaseEntityClient
-{
-
-    protected $article_base_filter = 'article.sonata-blog-post-container';
-
-    /**
-     *  {@inheritdoc}
-     */
-    public function saveClientProfile(Crawler $entity_crawler)
-    {
-        $this->setItem('title', trim($entity_crawler->filter('.sonata-blog-post-title a')->text()));
-        $this->setItem('content', $this->getArrayValues($entity_crawler->filter('.sonata-blog-post-content p')), TRUE);
+        return $links;
     }
 
     /**
-     *  {@inheritdoc}
+     * @depends testHandleIndex
      */
-    public function normalizeEntity($entity)
+    public function testHandleLinks($links)
     {
-        $entity->setTitle($this->getItem('title', true));
-        $entity->setContent(implode('', $this->getItem('content')));
+        $links = array_slice($links, -3);
+        $handler = $this->getMockHandler();
+        $client = $this->getMockClient();
+        /*
+          $client->expects($this->once())
+          ->method('afterEntityPersist')
+          ->with($this->equalTo('something'))
+          ;
+         */
+        $crawler = $this->getMockCrawler(file_get_contents(__DIR__ . '/../data/entity_example.html'));
+        $client->expects($this->at(0))->method("crawl")->will($this->returnValue($crawler));
+        $crawler = $this->getMockCrawler(file_get_contents(__DIR__ . '/../data/entity_example_page_2.html'));
+        $client->expects($this->at(1))->method("crawl")->will($this->returnValue($crawler));
+        $crawler = $this->getMockCrawler('empty');
+        $client->expects($this->at(2))->method("crawl")->will($this->returnValue($crawler));
 
-        return $entity;
-    }
-
-    /**
-     *  {@inheritdoc}
-     */
-    protected function stringsToFilter()
-    {
-        return [
-            'removethis',
-        ];
-    }
-}
-
-/**
- * entity for tests purposes
- */
-class TestEntity
-{
-
-    protected $title;
-    protected $content;
-
-    public function setTitle($title)
-    {
-        $this->title = $title;
-    }
-
-    public function getTitle()
-    {
-        return $this->title;
-    }
-
-    public function setContent($content)
-    {
-        $this->content = $content;
-    }
-
-    public function getContent()
-    {
-        return $this->content;
-    }
-}
-
-/**
- * index client for test exceptions
- */
-class ExceptionIndexClient extends BaseIndexClient
-{
-
-    protected $start_page = 1;
-    protected $limit_pages = 1;
-
-    function __construct()
-    {
-        $this->baseurl = 'http://www.ainanas.com/NOTFOUND/';
-
-        $this->index_link_filter = 'body div#content a.post_title';
-    }
-
-    public function getNextPageUrl($current_page)
-    {
-        $url = $this->baseurl . 'page/' . $current_page;
-        return $url;
+        $entities = $handler->handleLinks($client, $links, true);
+        $this->assertEquals(count($entities), 2);
+        $this->assertEquals($entities[0]->getTitle(), 'Entity Title');
+        $this->assertEquals($entities[0]->getContent(), 'lipsum 1,lipsum 2,lipsum 3');
+        $this->assertEquals($entities[1]->getTitle(), 'Entity Title Second');
+        $this->assertEquals($entities[1]->getContent(), 'lorem 1,lorem 2,lorem 3');
+        $this->assertEquals(count($handler->getErrors()), 1);
+        $this->assertEquals($links[0]->getNotes(), array(
+            'crawled_entity' => 'crawled entity: Entity Title',
+            'created_entity' => 'created entity: Nz\CrawlerBundle\Tests\Client\ExampleEntity:0'
+        ));
+        $this->assertEquals($links[2]->getNotes(), array('exception' => 'The current node list is empty.'));
     }
 }

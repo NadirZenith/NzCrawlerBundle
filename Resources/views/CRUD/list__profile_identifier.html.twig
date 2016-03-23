@@ -2,15 +2,22 @@
 {% extends 'SonataAdminBundle:CRUD:base_list_field.html.twig' %}
 
 {% block field %}
-    {%set config = admin.profileConfig(object)%}
-
-    {% if config.index.logo_url is defined and config.index.logo_url %}
+    {#{%set config = admin.parseConfig(object.config)%}#}
+    {%set config = object.parsedConfig%}
+    {% if config.logo_url is defined and config.logo_url %}
         <div class="col-sm-4">
-            <img src={{config.index.logo_url}}>
+            <img src={{config.logo_url}}>
         </div>
     {% endif %}
     <div class="col-sm-8">
         <a href="{{ admin.generateUrl('edit', {'id' : object|sonata_urlsafeid }) }}"><strong>{{ object }}</strong></a>
+        <p>
+            {% if config.baseurl is defined and config.baseurl %}
+                <strong>baseurl: </strong>{{config.baseurl}}<br>
+            {% endif %}
+            {% include 'NzCrawlerBundle:Parts:profile_meta.html.twig' with {'object': object} only %}
+            
+        </p>
     </div>
 {% endblock %}
 

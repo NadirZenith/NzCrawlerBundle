@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of the Sonata package.
- *
- * (c) Thomas Rabaix <thomas.rabaix@sonata-project.org>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace Nz\CrawlerBundle\Admin;
 
 use Knp\Menu\ItemInterface as MenuItemInterface;
@@ -30,6 +21,7 @@ class LinkAdmin extends Admin
      */
     protected $linkManager;
     protected $maxPerPage = 300;
+    protected $parentAssociationMapping = 'profile';
 
     /**
      * Default values to the datagrid.
@@ -61,7 +53,7 @@ class LinkAdmin extends Admin
             ->add('id')
             ->add('url')
             ->add('processed')
-            ->add('hasError')
+            ->add('error')
             ->add('skip')
             ->add('notes')
             ->add('crawledAt')
@@ -77,31 +69,54 @@ class LinkAdmin extends Admin
             ->with('Option', array(
                 'class' => 'col-md-8',
             ))
+            ->add('name')
             ->add('url', 'url')
             ->add('processed')
-            ->add('hasError')
+            ->add('error')
             ->add('skip')
             ->add('crawledAt')
             ->add('notes')
+            ->add('profile')
             ->end()
         ;
+        /*
+          $formMapper->getFormBuilder()->get('notes')
+          ->addModelTransformer(new CallbackTransformer(
+          function ($dbNotes) {
+          $json = json_encode($dbNotes);
+          return $json;
+          }, function ($formNotes) {
 
-        $formMapper->getFormBuilder()->get('notes')
-            ->addModelTransformer(new CallbackTransformer(
-                function ($dbNotes) {
-                $json = json_encode($dbNotes);
-                return $json;
-            }, function ($formNotes) {
+          if (empty($formNotes)) {
+          return [];
+          }
 
-                if (empty($formNotes)) {
-                    return [];
-                }
+          $array = json_decode($formNotes, true);
+          return $array;
+          }
+          ))
+          ;
+         */
+    }
 
-                $array = json_decode($formNotes, true);
-                return $array;
-            }
-            ))
-        ;
+    public function createQuery($context = 'list')
+    {
+        $query = parent::createQuery($context);
+
+        if ($this->getParent()) {
+            return $query;
+        }
+
+        if ($this->getRequest()->get('filter')) {
+            return $query;
+        }
+
+        $query->andWhere(
+            $query->getRootAliases()[0] . '.profile is NULL'
+        );
+        return $query;
+        /* d($this->getRequest()); */
+        /* dd($query); */
     }
 
     /**
@@ -115,7 +130,7 @@ class LinkAdmin extends Admin
                 'template' => 'NzCrawlerBundle:CRUD:list__link_identifier.html.twig'
             ))
             ->add('processed', null)
-            ->add('hasError', null, array('editable' => true))
+            ->add('error', null, array('editable' => true))
             ->add('skip', null, array('editable' => true))
             /*       custom actions     */
             ->add('_action', 'crawl', array(
@@ -138,8 +153,21 @@ class LinkAdmin extends Admin
         $datagridMapper
             ->add('url')
             ->add('processed')
-            ->add('hasError')
+            ->add('error')
             ->add('skip')
+        ;
+
+        if ($this->getParent()) {
+            return;
+        }
+        //if not in parent add by profile filter
+        $datagridMapper
+            /*
+             */
+            ->add('profile', null, array(), 'entity', array(
+                'class' => 'Nz\CrawlerBundle\Entity\Profile',
+                'property' => 'name',
+            ))
         ;
     }
 
@@ -159,10 +187,13 @@ class LinkAdmin extends Admin
                 'style' => sprintf($style, $persist ? 'orangered' : 'greenyellow')
             )
         ]);
+
         if ('list' === $action) {
             $menu->addChild($this->trans('sidemenu.link_crawl_indexes'), [
                 'uri' => $this->generateUrl('crawl-indexes'),
             ]);
+            /* $admin = $this->isChild() ? $this->getParent() : $this; */
+
             $menu->addChild($this->trans('sidemenu.link_crawl_links'), [
                 'uri' => $this->generateUrl('crawl-links'),
             ]);

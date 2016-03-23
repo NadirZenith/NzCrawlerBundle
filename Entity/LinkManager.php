@@ -31,4 +31,9 @@ class LinkManager extends BaseEntityManager implements LinkManagerInterface
     {
         return $this->getRepository()->findLinksForProcess($limit);
     }
+
+    public function findProfileLinksForProcess(Profile $profile, $limit = false)
+    {
+        return $this->getRepository()->findProfileLinksForProcess($profile->getId(), $limit);
+    }
 }

@@ -2,8 +2,7 @@
 
 namespace Nz\CrawlerBundle\Crawler;
 
-use Nz\CrawlerBundle\Client\IndexClientInterface;
-use Nz\CrawlerBundle\Client\EntityClientInterface;
+use Nz\CrawlerBundle\Client\ClientInterface;
 
 /**
  * Handler interface 
@@ -16,20 +15,20 @@ interface HandlerInterface
     /**
      * Handle Index Client
      * 
-     * @param IndexClientInterface $client The client
+     * @param ClientInterface $client The client
      * @param boolean $persist If should persist Link
      * 
      * @return array Array of links
      */
-    public function handleIndexClient(IndexClientInterface $client);
+    public function handleIndex(ClientInterface $client);
 
     /**
-     * Handle Entity Client
+     * Handle Link
      * 
-     * @param EntityClientInterface $client
+     * @param ClientInterface $client
      * @param boolean $persist whether to persist entity
      * 
      * @return Entity | boolean Entity on success false otherwise
      */
-    public function handleEntityClient(EntityClientInterface $client);
+    public function handleLink(ClientInterface $client);
 }

@@ -9,11 +9,14 @@ abstract class Link implements LinkInterface
 {
 
     protected $url;
+    protected $name;
     protected $processed = false;
-    protected $hasError = false;
+    protected $error = false;
     protected $skip = false;
     protected $notes;
+    protected $items;
     protected $crawledAt;
+    protected $profile;
 
     /**
      * {@inheritdoc}
@@ -30,6 +33,14 @@ abstract class Link implements LinkInterface
     /**
      * {@inheritdoc}
      */
+    public function setUrl($url)
+    {
+        $this->url = $url;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getUrl()
     {
         return $this->url;
@@ -38,9 +49,17 @@ abstract class Link implements LinkInterface
     /**
      * {@inheritdoc}
      */
-    public function setUrl($url)
+    public function setName($name)
     {
-        $this->url = $url;
+        $this->name = $name;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getName()
+    {
+        return $this->name;
     }
 
     /**
@@ -62,17 +81,17 @@ abstract class Link implements LinkInterface
     /**
      * {@inheritdoc}
      */
-    public function getHasError()
+    public function getError()
     {
-        return $this->hasError;
+        return $this->error;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function setHasError($hasError)
+    public function setError($error)
     {
-        $this->hasError = $hasError;
+        $this->error = $error;
     }
 
     /**
@@ -117,6 +136,8 @@ abstract class Link implements LinkInterface
         $notes[$name] = $value;
 
         $this->setNotes($notes);
+
+        return $this;
     }
 
     /**
@@ -150,6 +171,22 @@ abstract class Link implements LinkInterface
     /**
      * {@inheritdoc}
      */
+    public function setItems(array $items = array())
+    {
+        $this->items = $items;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getItems()
+    {
+        return $this->items;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getCrawledAt()
     {
         return $this->crawledAt;
@@ -161,10 +198,30 @@ abstract class Link implements LinkInterface
     public function setCrawledAt(\DateTime $crawledAt = null)
     {
         $this->crawledAt = $crawledAt;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setProfile(Profile $profile = null)
+    {
+        $this->profile = $profile;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getProfile()
+    {
+        return $this->profile;
     }
 
     public function __toString()
     {
-        return $this->url;
+        return isset($this->name) ? $this->name : $this->url;
     }
 }

@@ -33,7 +33,7 @@ class CrawlIndexesCommand extends BaseCrawlCommand
         $links = [];
         $errors = [];
         foreach ($clients_indexes as $client) {
-            $l = $handler->handleIndexClient($client, $persist);
+            $l = $handler->handleIndex($client, $persist);
 
             $links = array_merge($links, $l);
 

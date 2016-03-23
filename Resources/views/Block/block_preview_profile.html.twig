@@ -1,0 +1,57 @@
+{% extends sonata_block.templates.block_base %}
+
+{% block block %}
+    {#{{dump(settings.object)}}#}
+    {#{%set config = settings.admin.parseConfig(settings.object.config)%}#}
+
+    {% if settings.object %}
+
+        {% set config = settings.object.parsedConfig %}
+
+        {% if 'preview' == settings.view_type %}
+        {% if config.logo_url is defined and config.logo_url %}
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="media">
+                        <div class="media-left">
+                            <img src="{{config.logo_url}}" class="img-thumbnail">
+                        </div>
+                        <div class="media-body">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <h4 class="media-heading">{{settings.object}}</h4>
+                                    <p>
+                                        <strong>baseurl: </strong>{{config.baseurl}}
+                                    </p>
+
+                                    {% if settings.urls_form %}
+                                        <a href="#crawl-urls-to-{{settings.object.id}}" class="label label-info" type="button" data-toggle="collapse" aria-expanded="false" aria-controls="crawl-urls-to-{{settings.object.id}}}}">Crawl urls</a>
+
+                                        <div class="collapse" id="crawl-urls-to-{{settings.object.id}}">
+                                            {{ form(settings.urls_form, {'action' : settings.admin.generateUrl('crawl-urls',{'id' : settings.object.id})}) }}
+
+                                        </div>
+                                    {% endif %}
+                                    {% include 'NzCrawlerBundle:Parts:profile_meta.html.twig' with {'object': settings.object} only %}
+
+                                </div>
+                                <div class="col-sm-6">
+                                    <p>
+                                        <strong>target: </strong>{{config.target_class}}
+                                    </p>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <h1>bottom</h1>
+    {% endif %}
+
+    <br>
+    {% endif %}
+        {% endblock %}

@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of the Sonata package.
- *
- * (c) Thomas Rabaix <thomas.rabaix@sonata-project.org>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace Nz\CrawlerBundle\Admin;
 
 use Sonata\AdminBundle\Admin\Admin;
@@ -58,12 +49,77 @@ class ProfileAdmin extends Admin
         // on list
         //crawl index config
         $collection->add('crawl-index', $this->getRouterIdParameter() . '/crawl-index');
+        $collection->add('crawl-indexes');
         //crawl entity config
         $collection->add('crawl-entity', $this->getRouterIdParameter() . '/crawl-entity');
-        // crawl link(s)
+        $collection->add('crawl-entities');
+        // crawl url(s)
+        $collection->add('crawl-urls', $this->getRouterIdParameter() . '/crawl-urls');
         $collection->add('crawl-links', $this->getRouterIdParameter() . '/crawl-links');
         //clone profile
         $collection->add('clone', $this->getRouterIdParameter() . '/clone');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function configureSideMenu(MenuItemInterface $menu, $action, AdminInterface $childAdmin = null)
+    {
+        /* d($childAdmin); */
+        $admin = $childAdmin ? $childAdmin : $this;
+
+        $request = $this->getRequest();
+        $persist = $this->getRequest()->get('persist', false);
+
+        $uri = $admin->generateUrl($action, array_merge($request->attributes->get('_route_params'), array('persist' => !$persist)));
+        $style = 'background-color:%s';
+        $menu->addChild($persist ? $this->trans('sidemenu.link_persisting') : $this->trans('sidemenu.link_testing'), [
+            'uri' => $uri,
+            'attributes' => array(
+                'style' => sprintf($style, $persist ? 'orangered' : 'greenyellow')
+            )
+        ]);
+        $id = $this->getSubject() ? $this->getSubject()->getId() : false;
+
+        /* d('profileAdmin', $action); */
+        if (in_array($action, ['edit'])) {
+
+            $menu->addChild($this->trans('sidemenu.link_crawl_index'), array(
+                'uri' => $this->generateUrl('crawl-index', array('id' => $id))
+            ));
+
+            $menu->addChild($this->trans('sidemenu.link_crawl_urls'), array(
+                'uri' => $this->generateUrl('crawl-urls', array('id' => $id))
+            ));
+
+            $menu->addChild($this->trans('sidemenu.link_view_links'), array(
+                'uri' => $this->generateUrl('nz.crawler.admin.link.list', array('id' => $id))
+            ));
+        }
+        if (in_array($action, ['list'])) {
+            if ($id) {
+                $menu->addChild($this->trans('sidemenu.link_edit'), array(
+                    'uri' => $this->generateUrl('edit', array('id' => $id))
+                ));
+                $menu->addChild($this->trans('sidemenu.link_crawl_links'), array(
+                    'uri' => $this->generateUrl('crawl-links', array('id' => $id))
+                ));
+            } else {
+                $menu->addChild($this->trans('sidemenu.link_crawl_indexes'), array(
+                    'uri' => $this->generateUrl('crawl-indexes')
+                ));
+                $menu->addChild($this->trans('sidemenu.link_crawl_entities'), array(
+                    'uri' => $this->generateUrl('crawl-entities')
+                ));
+                //crawl indexes
+                //crawl entities
+            }
+        }
+        if (in_array($action, ['crawl-urls'])) {
+            $menu->addChild($this->trans('sidemenu.link_edit'), array(
+                'uri' => $this->generateUrl('edit', array('id' => $id))
+            ));
+        }
     }
 
     /**
@@ -117,7 +173,9 @@ class ProfileAdmin extends Admin
             ->with('Status', array(
                 'class' => 'col-md-10',
             ))
-            ->add('links', 'textarea', ['mapped' => false])
+            /* ->add('links', 'sonata_type_collection') */
+            /* ->add('links', 'textarea', ['mapped' => false]) */
+            /* ->add('links', 'sonata_type_collection') */
             ->end()
             ->end()
         ;
@@ -162,36 +220,6 @@ class ProfileAdmin extends Admin
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configureSideMenu(MenuItemInterface $menu, $action, AdminInterface $childAdmin = null)
-    {
-        $request = $this->getRequest();
-
-        $persist = $this->getRequest()->get('persist', false);
-        $uri = $this->generateUrl($action, array_merge($request->attributes->get('_route_params'), array('persist' => !$persist)));
-        $style = 'background-color:%s';
-        $menu->addChild($persist ? $this->trans('sidemenu.link_persisting') : $this->trans('sidemenu.link_testing'), [
-            'uri' => $uri,
-            'attributes' => array(
-                'style' => sprintf($style, $persist ? 'orangered' : 'greenyellow')
-            )
-        ]);
-
-        if ('edit' === $action) {
-            $menu->addChild($this->trans('sidemenu.link_crawl_index'), [
-
-                'uri' => $this->generateUrl('crawl-index', array('id' => $this->getSubject()->getId()))
-            ]);
-            $menu->addChild($this->trans('sidemenu.link_crawl_links'), [
-                'uri' => $this->generateUrl('crawl-links', array('id' => $this->getSubject()->getId())),
-                'attributes' => array(
-                )
-            ]);
-        }
-    }
-
     public function getPersistentParameters()
     {
         if (!$this->getRequest()) {
@@ -208,16 +236,7 @@ class ProfileAdmin extends Admin
     public function validate(ErrorElement $errorElement, $profile)
     {
         try {
-            $parser = new Parser();
-            $config = $parser->parse($profile->getConfig());
-
-            // Use a Symfony ConfigurationInterface object to specify the *.yml format
-            $yamlConfiguration = new Configuration();
-            // Process the configuration files (merge one-or-more *.yml files)
-            $processor = new Processor();
-            $processor->processConfiguration(
-                $yamlConfiguration, array($config) // As many *.yml files as required
-            );
+            $this->parseConfig($profile->getConfig());
         } catch (ParseException $ex) {
 
             $errorElement->addViolation(sprintf('Invalid YML: %s ', $ex->getMessage()));
@@ -226,32 +245,18 @@ class ProfileAdmin extends Admin
         }
     }
 
-    public function getProfileConfig($profile)
+    public function parseConfig($config)
     {
-        try {
-            $parser = new Parser();
-            $config = $parser->parse($profile->getConfig());
-        } catch (ParseException $ex) {
 
-            $this->addFlash('sonata_flash_error', sprintf('Invalid YML: %s ', $ex->getMessage()));
-        }
-
-
+        $parser = new Parser();
         // Use a Symfony ConfigurationInterface object to specify the *.yml format
         $yamlConfiguration = new Configuration();
 
         // Process the configuration files (merge one-or-more *.yml files)
         $processor = new Processor();
-        try {
-            $configuration = $processor->processConfiguration(
-                $yamlConfiguration, array($config) // As many *.yml files as required
-            );
-        } catch (InvalidConfigurationException $ex) {
-
-            $this->addFlash('sonata_flash_error', sprintf('Invalid Configuration: %s ', $ex->getMessage()));
-        }
-
-        return $configuration;
+        return $processor->processConfiguration(
+                $yamlConfiguration, array($parser->parse($config)) // As many *.yml files as required
+        );
     }
 
     /**
@@ -259,6 +264,13 @@ class ProfileAdmin extends Admin
     public function setProfileManager(ProfileManagerInterface $profileManager)
     {
         $this->profileManager = $profileManager;
+    }
+
+    /**
+     */
+    public function getProfileManager()
+    {
+        return $this->profileManager;
     }
 
     /**

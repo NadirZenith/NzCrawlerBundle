@@ -16,11 +16,18 @@ interface LinkInterface
     public function getId();
 
     /**
-     * Get url.
+     * Set name.
+     *
+     * @param string $name
+     */
+    public function setName($name);
+
+    /**
+     * Get name.
      *
      * @return string
      */
-    public function getUrl();
+    public function getName();
 
     /**
      * Set Url.
@@ -28,6 +35,13 @@ interface LinkInterface
      * @param string $url
      */
     public function setUrl($url);
+
+    /**
+     * Get url.
+     *
+     * @return string
+     */
+    public function getUrl();
 
     /**
      * Get processed.
@@ -44,20 +58,20 @@ interface LinkInterface
     public function setProcessed($processed);
 
     /**
-     * Get hasError.
+     * Get error.
      *
-     * @return bool $hasError
+     * @return bool $error
      */
-    public function getHasError();
+    public function getError();
 
     /**
      * If occurs any error when processing url
      *
-     * Set hasError
+     * Set error
      *
-     * @param bool $hasError
+     * @param bool $error
      */
-    public function setHasError($hasError);
+    public function setError($error);
 
     /**
      * Get skip.

@@ -23,14 +23,7 @@ class ClientsCompilerPass implements CompilerPassInterface
         $definition = $container->getDefinition('nz.crawler.client.pool');
 
         foreach ($container->findTaggedServiceIds('nz.crawler') as $id => $attributes) {
-
-            if ($attributes[0]['client_type'] === 'index') {
-
-                $definition->addMethodCall('addIndexClient', array(new Reference($id)));
-            } elseif ($attributes[0]['client_type'] === 'entity') {
-
-                $definition->addMethodCall('addEntityClient', array(new Reference($id)));
-            }
+            $definition->addMethodCall('addClient', array(new Reference($id)));
         }
     }
 }

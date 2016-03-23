@@ -7,8 +7,9 @@
     <parameters>
         <parameter key="nz.crawler.handler.class">Nz\CrawlerBundle\Crawler\Handler</parameter>
         <parameter key="nz.crawler.client.pool.class">Nz\CrawlerBundle\Client\ClientPool</parameter>
-        <!--<parameter key="nz.crawler.admin.link.controller">SonataAdminBundle:CRUD</parameter>-->
-        <!--<parameter key="nz.crawler.admin.translation_domain">NzCrawlerBundle</parameter>-->
+        <parameter key="nz.crawler.matcher.media">Nz\CrawlerBundle\Crawler\MediaMatcher</parameter>
+        <parameter key="nz.crawler.client.config.class">Nz\CrawlerBundle\Client\ConfigClient</parameter>
+
     </parameters>
     
     <services>
@@ -17,7 +18,23 @@
         </service>   
         
         <service id="nz.crawler.client.pool" class="%nz.crawler.client.pool.class%">
-
         </service>   
+            
+        <service id="nz.crawler.matcher.media" class="%nz.crawler.matcher.media%">
+            <argument>\AppBundle\Entity\Media\Media</argument>
+            <argument>\AppBundle\Entity\Media\Gallery</argument>
+            <argument>\AppBundle\Entity\Media\GalleryHasMedia</argument>
+            <argument type="service" id="sonata.classification.manager.category" />
+        </service>   
+        
+        <service id="nz.crawler.client.config" class="%nz.crawler.client.config.class%">
+            <tag name="nz.crawler" client_type="index" />
+            <argument>config</argument>
+            <argument type="service" id="nz.crawler.matcher.media" />
+            
+            <!--<call method="setCategoryManager"></call>-->
+        </service>
+        
+
     </services>
 </container>

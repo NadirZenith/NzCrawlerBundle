@@ -34,6 +34,6 @@ abstract class BaseCrawlCommand extends ContainerAwareCommand
      */
     protected function getLinkManager()
     {
-        return $this->getContainer()->get('nz.crawler.link.manager');
+        return $this->getContainer()->get('nz.crawler.manager.link');
     }
 }

@@ -34,8 +34,8 @@ class Configuration implements ConfigurationInterface
     private function addIndexSection($rootNode){
         $rootNode
             ->children()
-                ->arrayNode('index')
-                    ->children()
+                /*->arrayNode('index')*/
+                    /*->children()*/
                         ->scalarNode('service')->info('...')->cannotBeEmpty()->defaultValue('nz.migration.wp.user_default')->end()
                         ->scalarNode('baseurl')->info('Src Entity')->cannotBeEmpty()->defaultValue('\Nz\WordpressBundle\Entity\User')->end()
                         ->scalarNode('base_domain')->info('Base domain to prepend to relative paths')->cannotBeEmpty()->end()
@@ -54,8 +54,8 @@ class Configuration implements ConfigurationInterface
                         ->arrayNode('regexes_to_filter')
                             ->prototype('scalar')->end()
                         ->end()
-                    ->end()
-                ->end()
+                    /*->end()*/
+                /*->end()*/
             ->end()
         ;
     }
@@ -65,10 +65,10 @@ class Configuration implements ConfigurationInterface
     private function addEntitySection($rootNode){
         $rootNode
             ->children()
-                ->arrayNode('entity')
-                    ->children()
+                /*->arrayNode('entity')*/
+                    /*->children()*/
                         ->scalarNode('service')->info('...')->cannotBeEmpty()->defaultValue('nz.migration.wp.user_default')->end()
-                        ->scalarNode('target_entity')->info('...')->cannotBeEmpty()->defaultValue('AppBundle/Entity/News/Post')->end()
+                        ->scalarNode('target_class')->info('...')->cannotBeEmpty()->defaultValue('AppBundle/Entity/News/Post')->end()
                         ->scalarNode('base_host')->info('...')->cannotBeEmpty()->defaultValue('nz.migration.wp.user_default')->end()
                         ->scalarNode('article_base_filter')->info('Src Entity')->cannotBeEmpty()->defaultValue('\Nz\WordpressBundle\Entity\User')->end()
                         ->scalarNode('link_filter_selector')->info('..')->cannotBeEmpty()->end()
@@ -84,10 +84,11 @@ class Configuration implements ConfigurationInterface
                         ->end()
                         /*->append($this->addItemsMappingNode())*/
                         ->append($this->addFieldsMappingNode('items'))
+                        ->append($this->addFieldsMappingNode('filters'))
                         ->append($this->addFieldsMappingNode('defaults'))
                         ->append($this->addFieldsMappingNode('entity'))
-                    ->end()
-                ->end()
+                    /*->end()*/
+                /*->end()*/
             ->end()
         ;
     }
@@ -113,11 +114,20 @@ class Configuration implements ConfigurationInterface
                         ->beforeNormalization()
                             ->ifArray()
                             ->then(function ($a) {
-                                if(count($a)===1){
-                                    return $a[0];
+                                if(count($a[0])===1){
+                                    //normal
+                                    return $this->fixOptions($a);
                                 }else{
-                                    return $a;
-                                    
+                                    //stack
+                                    $result = [];
+                                    foreach ($a as $stack ) {
+                                        $result[] = [
+                                            $stack[0],
+                                            $stack[1],
+                                            $this->fixOptions($stack[2])
+                                        ];
+                                    }
+                                    return $result;
                                 }
                                
                             })
@@ -131,4 +141,14 @@ class Configuration implements ConfigurationInterface
 
     }
     
+    private function fixOptions($a)
+    {
+        $result = [];
+        foreach ($a as $option ) {
+            $result = array_merge($result,$option);
+        }
+        
+        return $result;
+
+    }
 }

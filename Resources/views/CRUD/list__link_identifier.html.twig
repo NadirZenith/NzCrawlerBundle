@@ -14,22 +14,72 @@ file that was distributed with this source code.
 {% block field %}
 
     <div class="col-sm-12">
-        <a href="{{ admin.generateUrl('edit', {'id' : object|sonata_urlsafeid }) }}"><strong>{{ object.url }}</strong></a>
+        <a href="{{ admin.generateUrl('edit', {'id' : object|sonata_urlsafeid }) }}"><strong>{{ object }}</strong></a>
         <br>
-        <a href="#notes-{{object.id}}" class="label label-info" type="button" data-toggle="collapse" aria-expanded="false" aria-controls="notes-{{object.id}}}}">
-            notes
-        </a>
-        <div class="collapse" id="notes-{{object.id}}">
+
+        {% if object.items %}
+            <a href="#items-{{object.id}}" class="label label-info" type="button" data-toggle="collapse" aria-expanded="false" aria-controls="items-{{object.id}}">
+                Items
+            </a>
+            <div class="collapse" id="items-{{object.id}}">
+                {#{{dump(object.items)}}#}
                 <ul class="list-group">
-                    {% for type, note in object.notes %}
+                    {% for name, item in object.items %}
                         <li class="list-group-item">
-                            {{ type }} ->
-                            {{ note  }}
+                            <strong>{{ name }}: </strong>
+                            {% if item is iterable %}
+                                <div class="row object-medias">
+
+                                    {% for i in item %}
+                                        {#  array or items #}
+                                        {% if i is iterable %}
+                                            {% if i.url%}
+                                                {#  array or medias #}
+                                                {% if i.provider and i.provider == 'sonata.media.provider.image'%}
+                                                    <div class="col-md-1" style="padding: 0">
+                                                        <img class="img-responsive" src="{{i.url}}">
+                                                    </div>
+                                                {% else %}
+                                                    <div class="col-md-12">
+                                                        {{i.url}}
+                                                    </div>
+                                                {% endif %}
+                                            {% endif %}
+
+                                        {% else %}
+                                            {{i}}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+
+                            {% else %}
+                                {#  string item#}
+                                {{item}}
+                            {% endif %}
+
                         </li>
                     {% endfor %}
                 </ul>
+                {#            
+                #}
+            </div>
+
+        {% endif %}
+        <a href="#notes-{{object.id}}" class="label label-info" type="button" data-toggle="collapse" aria-expanded="false" aria-controls="notes-{{object.id}}">
+            notes
+        </a>
+        <div class="collapse" id="notes-{{object.id}}">
+            <ul class="list-group">
+                {% for type, note in object.notes %}
+                    <li class="list-group-item">
+                        {{ type }} ->
+                        {{ note  }}
+                    </li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
+
 {% endblock %}
 
 

@@ -38,7 +38,7 @@ class CrawlLinksCommand extends BaseCrawlCommand
             $client = $clientPool->getEntityClientForLink($link);
 
             if ($client) {
-                $entity = $handler->handleEntityClient($client, $persist);
+                $entity = $handler->handleLink($client, $persist);
 
                 if (!$entity) {
                     $notes = $link->getNotes();

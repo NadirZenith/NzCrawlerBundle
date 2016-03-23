@@ -22,7 +22,7 @@
             <argument>%nz.crawler.admin.link.controller%</argument>
 
             <call method="setLinkManager">
-                <argument type="service" id="nz.crawler.link.manager" />
+                <argument type="service" id="nz.crawler.manager.link" />
             </call>
 
             <call method="setTranslationDomain">
@@ -37,11 +37,14 @@
             <argument>%nz.crawler.manager.profile.entity%</argument>
             <argument>%nz.crawler.admin.profile.controller%</argument>
 
+           
+            
             <call method="setLinkManager">
-                <argument type="service" id="nz.crawler.link.manager" />
+                <argument type="service" id="nz.crawler.manager.link" />
             </call>
+            
             <call method="setProfileManager">
-                <argument type="service" id="nz.crawler.profile.manager" />
+                <argument type="service" id="nz.crawler.manager.profile" />
             </call>
 
             <call method="setTranslationDomain">
@@ -50,11 +53,32 @@
             
             <call method="setTemplates">
                 <argument type="collection">
-                    <argument key="crawl_links">NzCrawlerBundle:CRUD:profile_crawl_links.html.twig</argument>
+                    <argument key="crawl_urls">NzCrawlerBundle:CRUD:profile_crawl_urls.html.twig</argument>
                 </argument>
             </call>
 
+            <call method="addChild">
+                <argument type="service" id="nz.crawler.admin.link" />
+            </call>
 
         </service>   
+        
+        <service id="nz.crawler.event.preview_profile" class="Nz\CrawlerBundle\Block\PreviewProfileEvent">
+            <tag name="kernel.event_listener" event="sonata.block.event.sonata.admin.list.table.top" method="onProfileAdminTop"/>
+            <tag name="kernel.event_listener" event="sonata.block.event.sonata.admin.show.top" method="onProfileAdminTop"/>
+            <tag name="kernel.event_listener" event="sonata.block.event.sonata.admin.edit.form.top" method="onProfileAdminTop"/>
+            <tag name="kernel.event_listener" event="sonata.block.event.sonata.admin.edit.form.bottom" method="onProfileAdminBottom"/>
+        </service>
+        
+        <service id="nz.crawler.block.preview_profile" class="Nz\CrawlerBundle\Block\PreviewProfileBlock">
+            <tag name="sonata.block" />
+            <argument>nz.crawler.block.preview_profile</argument>
+            <argument type="service" id="templating" />
+            
+            <call method="setFormBuilder">
+                <argument type="service" id="form.factory" />
+            </call>
+        </service>
+        
     </services>
 </container>

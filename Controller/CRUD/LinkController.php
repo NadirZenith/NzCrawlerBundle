@@ -16,27 +16,6 @@ class LinkController extends Controller
 {
 
     /**
-     * default list action
-     */
-    public function listAction(Request $request = null)
-    {
-        if (false === $this->admin->isGranted('LIST')) {
-            throw new AccessDeniedException();
-        }
-
-        $datagrid = $this->admin->getDatagrid();
-        $formView = $datagrid->getForm()->createView();
-
-        return $this->render('NzCrawlerBundle:CRUD:list.html.twig', array(
-                'action' => 'list',
-                'mode' => 'list',
-                'form' => $formView,
-                'datagrid' => $datagrid,
-                'csrf_token' => $this->getCsrfToken('sonata.batch'),
-                ), null, $request);
-    }
-
-    /**
      * crawl all indexes into new links
      */
     public function crawlIndexesAction(Request $request = null)
@@ -46,12 +25,11 @@ class LinkController extends Controller
 
         $handler = $this->getHandler();
         $clientPool = $this->getClientPool();
-
-        $clients_indexes = $clientPool->getIndexClients();
+        $clients = $clientPool->getClients();
         $links = [];
         $errors = [];
-        foreach ($clients_indexes as $client) {
-            $l = $handler->handleIndexClient($client, $persist);
+        foreach ($clients as $client) {
+            $l = $handler->handleIndex($client, $persist);
 
             $links = array_merge($links, $l);
 
@@ -59,20 +37,7 @@ class LinkController extends Controller
             $errors = array_merge($errors, $e);
         }
 
-        $info = '';
-        foreach ($links as $link) {
-            $info .= sprintf('<p>%s</p>', $link->getUrl());
-        }
-
-        $error = '';
-        foreach ($errors as $err) {
-            $notes = $err->getNotes();
-            $error .= sprintf('<p>%s</p>', end($notes));
-        }
-
-        $this->addFlash('sonata_flash_info', sprintf('Clients: %s ', count($clients_indexes)));
-        $this->addFlash('sonata_flash_success', sprintf('New Links: %s <br> %s', count($links), $info));
-        $this->addFlash('sonata_flash_error', sprintf('Errors: %s <br> %s', count($errors), $error));
+        $this->addFlashMessage(['success' => $links], [ 'Errors' => $errors]);
 
         return new RedirectResponse($this->admin->generateUrl('list'));
     }
@@ -80,34 +45,42 @@ class LinkController extends Controller
     /**
      * Crawl link
      */
-    public function crawlLinkAction($id)
+    public function crawlLinkAction($id, Request $request = null)
     {
+
         $link = $this->admin->getSubject();
+        $handler = $this->getHandler();
+        $persist = $request->get('persist', false);
 
         if (!$link) {
             throw new NotFoundHttpException(sprintf('unable to find the link with id : %s', $id));
         }
 
         $clientPool = $this->getClientPool();
-        $client = $clientPool->getEntityClientForLink($link);
+        if ($this->admin->getParent()) {
+            //dynamic client from profile
+            $profile = $this->admin->getParent()->getSubject();
+            $client = $clientPool->getClient('config');
+            $client->configure($profile->getParsedConfig());
+            $client->setLink($link);
+        } else {
+            //system client
+            $client = $clientPool->getClientForLink($link);
+        }
+
         if (!$client) {
             $this->addFlash('sonata_flash_error', sprintf('No client for url: %s', $link->getUrl()));
             return new RedirectResponse($this->admin->generateUrl('list'));
         }
 
-        $handler = $this->getHandler();
-        $entity = $handler->handleEntityClient($client, true);
+        $entity = $handler->handleLink($client, $persist);
+        if ($entity) {
 
-        if (!$entity) {
-            $notes = $link->getNotes();
-            $note = substr(end($notes), 0, 200);
-
-            $this->addFlash('sonata_flash_error', sprintf('Error creating entity: %s', $note));
+            $this->addFlashMessage(['Success' => [$entity]]);
         } else {
 
-            $this->addFlash('sonata_flash_success', sprintf('Created entity with id %s', $entity->getId()));
+            $this->addFlashMessage(['Success' => []], ['Errors' => $handler->getErrors()]);
         }
-
         return new RedirectResponse($this->admin->generateUrl('list'));
     }
 
@@ -132,7 +105,7 @@ class LinkController extends Controller
             $client = $clientPool->getEntityClientForLink($link);
 
             if ($client) {
-                $entity = $handler->handleEntityClient($client, $persist);
+                $entity = $handler->handleLink($client, $persist);
 
                 if (!$entity) {
                     $notes = $link->getNotes();
@@ -174,7 +147,7 @@ class LinkController extends Controller
             $this->addFlash('sonata_flash_error', sprintf('No client for url: %s', $link->getUrl()));
             return new RedirectResponse($this->admin->generateUrl('list'));
         }
-        $entity = $handler->handleEntityClient($client, $persist);
+        $entity = $handler->handleLink($client, $persist);
 
         if (!$entity) {
             $notes = $link->getNotes();
@@ -186,6 +159,29 @@ class LinkController extends Controller
         }
 
         return new RedirectResponse($this->admin->generateUrl('list'));
+    }
+
+    public function addFlashMessage($success, $info = array(), $errors = array())
+    {
+        $key = is_int(key($success)) ? 'Success' : key($success);
+        $success = is_int(key($success)) ? $success : $success[$key];
+        $this->addFlash('sonata_flash_success', sprintf('<b>%s:</b> %d <br>%s', $key, count($success), implode('<br>', $success)));
+
+        if (!empty($info)) {
+            $key = is_int(key($info)) ? 'Info' : key($info);
+            $info = is_int(key($info)) ? $info : $info[$key];
+            $this->addFlash('sonata_flash_info', sprintf('<b>%s:</b> %d <br>%s', $key, count($info), implode('<br>', $info)));
+        }
+
+        if (!empty($errors)) {
+            $e = [];
+            foreach ($errors as $link) {
+
+                $notes = $link->getNotes();
+                $e[] = substr(end($notes), 0, 200);
+            }
+            $this->addFlash('sonata_flash_error', sprintf('<b>Errors:</b> %d <br>%s', count($errors), implode('<br>', $e)));
+        }
     }
 
     /**
@@ -215,6 +211,6 @@ class LinkController extends Controller
      */
     private function getLinkManager()
     {
-        return $this->get('nz.crawler.link.manager');
+        return $this->get('nz.crawler.manager.link');
     }
 }

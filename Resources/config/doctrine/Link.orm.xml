@@ -6,21 +6,41 @@
         table="nz__crawler_link"
         repository-class="Nz\CrawlerBundle\Entity\LinkRepository">
 
+        <unique-constraints>
+            <unique-constraint columns="crawled_url,profile_id" name="profile_link_idx" />
+        </unique-constraints>
+        
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>
         </id>
         
-        <field name="url"           type="string"    column="crawled_url"     unique="true"/>
+        <field name="name"          type="string"     column="link_text"      nullable="true"/>
+        
+        <field name="url"           type="string"     column="crawled_url" />
 
-        <field name="processed"     type="boolean"   column="processed"       default="false" />
+        <field name="processed"     type="boolean"    column="processed"      default="false" />
         
-        <field name="hasError"      type="boolean"   column="has_error"       default="false" />
+        <field name="error"         type="boolean"    column="has_error"      default="false" />
         
-        <field name="skip"          type="boolean"   column="skip"            default="false" />
+        <field name="skip"          type="boolean"    column="skip"           default="false" />
         
-        <field name="notes"         type="json"      column="note"            nullable="true"  />
+        <field name="notes"         type="array"      column="note"           nullable="true"  />
+        
+        <field name="items"         type="array"      column="items"          nullable="true"  />
 
-        <field name="crawledAt"     type="datetime"  column="crawled_at" />
+        <field name="crawledAt"     type="datetime"   column="crawled_at" />
+        
+        <many-to-one
+            field="profile"
+            column="profile_id" 
+            target-entity="Nz\CrawlerBundle\Entity\Profile"
+        >
+            <!--            
+            <cascade>
+                <cascade-persist/>
+            </cascade>
+            -->
+        </many-to-one>
 
     </entity>
     

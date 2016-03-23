@@ -10,6 +10,14 @@
                 <source>sidemenu.link_testing</source>
                 <target>Testing</target>
             </trans-unit>
+            <trans-unit id="sidemenu.link_crawl_entities">
+                <source>sidemenu.link_crawl_entities</source>
+                <target>Crawl Entities</target>
+            </trans-unit>
+            <trans-unit id="sidemenu.link_crawl_links">
+                <source>sidemenu.link_crawl_links</source>
+                <target>Crawl Links</target>
+            </trans-unit>
             <trans-unit id="sidemenu.link_crawl_indexes">
                 <source>sidemenu.link_crawl_indexes</source>
                 <target>Crawl Indexes</target>
@@ -18,9 +26,17 @@
                 <source>sidemenu.link_crawl_index</source>
                 <target>Crawl Index</target>
             </trans-unit>
-            <trans-unit id="sidemenu.link_crawl_links">
-                <source>sidemenu.link_crawl_links</source>
-                <target>Crawl Links</target>
+            <trans-unit id="sidemenu.link_crawl_urls">
+                <source>sidemenu.link_crawl_urls</source>
+                <target>Crawl Urls</target>
+            </trans-unit>
+            <trans-unit id="sidemenu.link_view_links">
+                <source>sidemenu.link_view_links</source>
+                <target>Links</target>
+            </trans-unit>
+            <trans-unit id="sidemenu.link_edit">
+                <source>sidemenu.link_edit</source>
+                <target>Edit</target>
             </trans-unit>
         </body>
     </file>

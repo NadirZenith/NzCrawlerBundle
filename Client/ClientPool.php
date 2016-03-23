@@ -7,42 +7,44 @@ use Nz\CrawlerBundle\Model\LinkInterface;
 class ClientPool
 {
 
-    protected $clients = array();
+    protected $clients;
 
     public function __construct()
     {
-        $this->clients['index'] = array();
-        $this->clients['entity'] = array();
+        $this->clients = array();
     }
 
     /**
-     *  Add index client to pool
+     *  Add client to pool
      * 
      * @param \Nz\CrawlerBundle\Client\IndexClientInterface $client Index Client class
      */
-    public function addIndexClient(IndexClientInterface $client)
+    public function addClient(ClientInterface $client)
     {
-        $this->clients['index'][$client->getName()] = $client;
+        $this->clients[$client->getName()] = $client;
     }
 
     /**
-     *  Get all index clients
+     * @param string $name
      * 
-     * @return array Array of index clients
+     * @return ClientInterface | false 
      */
-    public function getIndexClients()
+    public function getClient($name)
     {
-        return $this->clients['index'];
+        return isset($this->clients[$name]) ? $this->clients[$name] : false;
     }
 
     /**
-     * Add entity client to pool
      * 
-     * @param \Nz\CrawlerBundle\Client\EntityClientInterface $client Entity Client class
+     * @return array
      */
-    public function addEntityClient(EntityClientInterface $client)
+    public function getClients($force = false)
     {
-        $this->clients['entity'][$client->getName()] = $client;
+        $clients = array_filter($this->clients, function($k, $v) use ($force) {
+            return (!$force && $v === 'config') ? null : $k;
+        }, ARRAY_FILTER_USE_BOTH);
+
+        return array_values($clients);
     }
 
     /**
@@ -50,9 +52,9 @@ class ClientPool
      * 
      * @return EntityClientInterface | false EntityClient for provided link of false on no match
      */
-    public function getEntityClientForLink(LinkInterface $link)
+    public function getClientForLink(LinkInterface $link)
     {
-        $client = $this->getEntityClientForHost(str_replace('www.', '', parse_url($link->getUrl(), PHP_URL_HOST)));
+        $client = $this->getClientForHost(str_replace('www.', '', parse_url($link->getUrl(), PHP_URL_HOST)));
 
         if (!$client) {
             return false;
@@ -68,36 +70,8 @@ class ClientPool
      * 
      * @return EntityClientInterface | false EntityClient for provided link of false on no match
      */
-    public function getIndexClientForHost($name)
+    public function getClientForHost($name)
     {
-        return isset($this->clients['index'][$name]) ? $this->clients['index'][$name] : false;
-    }
-    /**
-     * @param string $name host
-     * 
-     * @return EntityClientInterface | false EntityClient for provided link of false on no match
-     */
-    public function getEntityClientForHost($name)
-    {
-        return isset($this->clients['entity'][$name]) ? $this->clients['entity'][$name] : false;
-    }
-    /**
-     * @param string $name
-     * 
-     * @return EntityClientInterface | false EntityClient for provided name of false on no match
-     */
-    public function getEntityClient($name)
-    {
-        return isset($this->clients['entity'][$name]) ? $this->clients['entity'][$name] : false;
-    }
-    
-    /**
-     * @param string $name
-     * 
-     * @return IndexClientInterface | false EntityClient for provided name of false on no match
-     */
-    public function getIndexClient($name)
-    {
-        return isset($this->clients['index'][$name]) ? $this->clients['index'][$name] : false;
+        return isset($this->clients[$name]) ? $this->clients[$name] : false;
     }
 }

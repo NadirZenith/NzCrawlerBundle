@@ -7,8 +7,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 //form
 use Nz\CrawlerBundle\Entity\Link;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Nz\CrawlerBundle\Form\Type\UrlsType;
 
 /**
  * Class CRUDController.
@@ -19,107 +18,113 @@ class ProfileController extends Controller
 {
 
     /**
-     * crawl all indexes into new links
+     * Crawl Profile Index Action
      */
     public function crawlIndexAction($id, Request $request = null)
     {
-
         $profile = $this->admin->getSubject();
-        $config = $this->admin->getProfileConfig($profile);
-
-        if (!is_array($config)) {
-            return $config;
-        }
-
         $persist = $request->get('persist', false);
+        $manager = $this->admin->getProfileManager();
 
-        $handler = $this->getHandler();
-        $clientPool = $this->getClientPool();
+        $links = $manager->handleProfileIndex($profile->getId(), $persist);
 
-        $client = $clientPool->getIndexClient('dynamic');
-
-        $client->useConfig($config['index']);
-
-        $links = $handler->handleIndexClient($client, $persist);
-        $info = '';
-        foreach ($links as $link) {
-            $info .= sprintf('<p>%s</p>', $link->getUrl());
-        }
-
-        $errors = $handler->getErrors();
-        $error = '';
-        foreach ($errors as $err) {
-            $notes = $err->getNotes();
-            $error .= sprintf('<p>%s</p>', end($notes));
-        }
-
-        $this->addFlash('sonata_flash_success', sprintf('New Links: %s <br> %s', count($links), $info));
-        $this->addFlash('sonata_flash_error', sprintf('Errors: %s <br> %s', count($errors), $error));
+        $errors = $manager->getLastHandlerErrors();
+        $this->addFlashMessage(['Success' => $links], ['Errors' => $errors]);
 
         return new RedirectResponse($this->admin->generateUrl('edit', array('id' => $id)));
     }
 
     public function crawlLinksAction($id, Request $request = null)
     {
-
-        $id = $request->get($this->admin->getIdParameter());
-
-        $object = $this->admin->getObject($id);
+        $manager = $this->admin->getProfileManager();
+        $profile = $this->admin->getSubject();
         $persist = $request->get('persist', false);
 
-        if (!$object) {
+        $entities = $manager->handleProfileLinks($profile->getId(), $persist);
+        $errors = $manager->getLastHandlerErrors();
+        $this->addFlashMessage(['success' => $entities], ['errors' => $errors]);
+
+        return new RedirectResponse($this->admin->generateUrl('nz.crawler.admin.link.list', array('id' => $id)));
+    }
+
+    /**
+     * Crawl Profile Index Action
+     */
+    public function crawlIndexesAction(Request $request = null)
+    {
+        die('crawl all profiles indexes');
+    }
+
+    public function crawlEntitiesAction(Request $request = null)
+    {
+        die('crawl all profiles entities');
+    }
+
+    public function addFlashMessage($success, $info = array(), $errors = array())
+    {
+        $key = is_null(key($success)) ? 'Success' : key($success);
+        $success = is_int(key($success)) ? $success : $success[$key];
+        $this->addFlash('sonata_flash_success', sprintf('<b>%s:</b> %d <br>%s', $key, count($success), implode('<br>', $success)));
+
+        if (!empty($info)) {
+            $key = is_int(key($info)) ? 'Info' : key($info);
+            $info = is_int(key($info)) ? $info : $info[$key];
+            $this->addFlash('sonata_flash_info', sprintf('<b>%s:</b> %d <br>%s', $key, count($info), implode('<br>->', $info)));
+        }
+
+        if (!empty($errors)) {
+            /* dd($errors); */
+            $key = is_null(key($errors)) ? 'Errors' : key($errors);
+            $values = is_null(key($errors)) ? $errors : $errors[$key];
+            $e = [];
+            foreach ($values as $error) {
+                $e[] = $error->getMessage();
+            }
+            $this->addFlash('sonata_flash_error', sprintf('<b>%s:</b> %d <br>%s', $key, count($values), implode('<br>->', $e)));
+        }
+    }
+
+    public function crawlUrlsAction($id, Request $request = null)
+    {
+
+        $id = $request->get($this->admin->getIdParameter());
+        $handler = $this->getHandler();
+        $client = $this->getClientPool()->getClient('config');
+        $profile = $this->admin->getSubject();
+        $persist = $request->get('persist', false);
+
+        if (!$profile) {
             throw $this->createNotFoundException(sprintf('unable to find the object with id : %s', $id));
         }
+        $client->configure($profile->getParsedConfig());
 
-        $this->admin->checkAccess('show', $object);
-
-        $preResponse = $this->preShow($request, $object);
-        if ($preResponse !== null) {
-            return $preResponse;
-        }
-
-        $this->admin->setSubject($object);
-
-        /*        */
-
-        // create a task and give it some dummy data for this example
-        $link = new Link();
-        /* $link->setUrl('url here'); */
-        $link->getCrawledAt(new \DateTime('now'));
-
-        $form = $this->createFormBuilder($link)
-            ->add('url', TextType::class)
-            /* ->add('dueDate', DateType::class) */
-            ->add('save', SubmitType::class, array('label' => 'Crawl Link'))
-            ->getForm();
-
+        $form = $this->createForm(UrlsType::class);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $config = $this->admin->getProfileConfig($object);
-            /*dd($persist);*/
-            $this->crawlLinkWithConfig($link, $config, $persist);
-            /* d($object); */
-            /* dd($link); */
-            // ... perform some action, such as saving the task to the database
+            $urls = explode(',', $form->get('urls')->getData());
+            $links = $handler->urlsToLinks($urls, $persist);
+            $errors = $handler->getErrors();
+            if ($persist) {
+                $profile->setLinks($links);
+                $this->getDoctrine()->getManager()->flush();
+            }
 
-            /* return $this->redirectToRoute('task_success'); */
+            $entities = $handler->handleLinks($client, $links, $persist);
+            $errors = array_merge($errors, $handler->getErrors());
+            /* dd($links, $entities, $errors); */
+            $this->addFlashMessage(['Links' => $links], ['Entities' => $entities], ['errors' => $errors]);
+
             return new RedirectResponse(
-                $this->admin->generateUrl('crawl-links', array('id' => $id))
+                $this->admin->generateUrl('crawl-urls', array('id' => $id))
             );
         }
-        /* dd($this->admin->getTemplates()); */
-        /* $datagrid = $this->admin->getDatagrid(); */
-        /* $formView = $datagrid->getForm()->createView(); */
 
-        return $this->render($this->admin->getTemplate('crawl_links'), array(
-                'action' => 'crawl-links',
+        return $this->render($this->admin->getTemplate('crawl_urls'), array(
+                'action' => 'crawl-urls',
                 'elements' => $this->admin->getShow(),
-                'object' => $object,
+                'object' => $profile,
                 'form' => $form->createView(),
-                /* 'form' => $formView, */
-                /* 'datagrid' => $datagrid, */
-                /* 'csrf_token' => $this->getCsrfToken('sonata.batch'), */
                 ), null, $request);
     }
 
@@ -149,31 +154,28 @@ class ProfileController extends Controller
 
     public function crawlEntityAction($id, Request $request = null)
     {
+        $handler = $this->getHandler();
+        $clientPool = $this->getClientPool();
+        $client = $clientPool->getEntityClient('dynamic');
+        $linkManager = $this->getLinkManager();
         $profile = $this->admin->getSubject();
-        $config = $this->admin->getProfileConfig($profile);
+        $config = $this->admin->parseConfig($profile->getConfig());
+        $persist = $request->get('persist', false);
         if (!is_array($config)) {
             return new RedirectResponse($this->admin->generateUrl('list'));
         }
 
-
-        $persist = $request->get('persist', false);
-        $handler = $this->getHandler();
-        $clientPool = $this->getClientPool();
-        $client = $clientPool->getEntityClient('dynamic');
-        $client->useConfig($config['entity']);
-
-        $linkManager = $this->getLinkManager();
+        /* $handler->setEntityClass($config['entity']['target_entity']); */
+        /* $client->useConfig($config['entity']); */
         $links = $linkManager->findFromHost($config['entity']['base_host']);
-        $links = array_splice($links, -1);
 
-        $handler->setEntityClass($config['entity']['target_entity']);
-
+        /* $links = array_splice($links, -1); */
         $errors = [];
         $entities = [];
         ini_set('max_execution_time', 0);
         foreach ($links as $link) {
             $client->setLink($link);
-            $entity = $handler->handleEntityClient($client, $persist);
+            $entity = $handler->handleLink($client, $persist);
             dd($entity);
             if (!$entity) {
                 $notes = $link->getNotes();
@@ -188,26 +190,6 @@ class ProfileController extends Controller
         d($config);
         d($links);
         dd($entities);
-    }
-
-    private function crawlLinkWithConfig($link, $config, $persist = false)
-    {
-        $handler = $this->getHandler();
-        $client = $this->getClientPool()->getEntityClient('dynamic');
-        $client->useConfig($config['entity']);
-
-        $handler->setEntityClass($config['entity']['target_entity']);
-
-        $client->setLink($link);
-        $entity = $handler->handleEntityClient($client, $persist);
-        if (!$entity) {
-            $notes = $link->getNotes();
-            $error = substr(end($notes), 0, 200);
-            $this->addFlash('sonata_flash_error', sprintf('Error: %s ', $error));
-        } else {
-            $success = method_exists($entity, '__toString') ? $entity : $entity->getId();
-            $this->addFlash('sonata_flash_success', sprintf('Success: %s ', $success));
-        }
     }
 
     /**
@@ -237,6 +219,6 @@ class ProfileController extends Controller
      */
     private function getLinkManager()
     {
-        return $this->get('nz.crawler.link.manager');
+        return $this->get('nz.crawler.manager.link');
     }
 }

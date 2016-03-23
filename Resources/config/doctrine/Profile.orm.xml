@@ -10,18 +10,32 @@
             <generator strategy="AUTO"/>
         </id>
         
-        <field name="name"        type="string"    column="name" />
+        <field name="name"                type="string"    column="name" />
         
-        <field name="config"        type="text"    column="config" />
+        <field name="config"              type="text"      column="config" />
 
-        <field name="processed"     type="boolean"   column="processed"       default="false" />
+        <field name="processed"           type="boolean"   column="processed"               default="false" />
 
-        <field name="enabled"          type="boolean"   column="enabled"         default="false" />
+        <field name="enabled"             type="boolean"   column="enabled"                 default="false" />
 
-        <field name="lastProcessedAt"     type="datetime"  column="last_processed_at" />
+        <field name="lastProcessedAt"     type="datetime"  column="last_processed_at"       nullable="true" />
         
-        <field name="lastProcessedStatus" type="string"   column="last_processed_status"  />
+        <field name="lastProcessedStatus" type="string"    column="last_processed_status"   nullable="true"/>
         
+        <one-to-many
+            field="links" 
+            target-entity="Nz\CrawlerBundle\Entity\Link" 
+            mapped-by="profile">
+            <cascade>
+                <cascade-persist/>
+            </cascade>
+            <!--            
+            <order-by>
+                <order-by-field name="number" direction="ASC" />
+            </order-by>
+            -->
+        </one-to-many>
+
     </entity>
     
 </doctrine-mapping>

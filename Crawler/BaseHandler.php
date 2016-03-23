@@ -25,16 +25,6 @@ abstract class BaseHandler implements HandlerInterface
         $this->managerRegistry = $managerRegistry;
     }
 
-    public function setEntityClass($entityClass)
-    {
-        $this->entityClass = $entityClass;
-    }
-
-    protected function getNewEntity()
-    {
-        return new $this->entityClass();
-    }
-
     /**
      *  Get entity manager
      * 
@@ -60,6 +50,7 @@ abstract class BaseHandler implements HandlerInterface
         $em = $this->getEntityManager();
 
         if (null !== $link->getId()) {
+
             $em->merge($link);
         } else {
 
@@ -73,8 +64,8 @@ abstract class BaseHandler implements HandlerInterface
             return true;
         } catch (UniqueConstraintViolationException $ex) {
 
-            $this->errors[] = array_pop($this->links);
             $link->setNote('duplicate_link_url', sprintf('Duplicate link url: %s', $link->getUrl()));
+            $this->errors[] = $ex;
 
             return false;
         }
