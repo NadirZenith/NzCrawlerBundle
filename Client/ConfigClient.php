@@ -7,6 +7,7 @@ use Symfony\Component\DomCrawler\Crawler;
 use AppBundle\Entity\Media\Media;
 use AppBundle\Entity\Media\Gallery;
 use AppBundle\Entity\Media\GalleryHasMedia;
+use Nz\CrawlerBundle\Model\LinkInterface;
 
 class ConfigClient extends BaseClient
 {
@@ -20,10 +21,10 @@ class ConfigClient extends BaseClient
         return $this;
     }
 
-    public function configure(array $config)
+    public function configure(LinkInterface $link, array $config = array())
     {
         /* dd($config); */
-        parent::configure();
+        parent::configure($link, $config);
         extract($config);
         $this->config = $config;
         $this->setTargetClass($target_class);

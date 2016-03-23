@@ -17,14 +17,15 @@ class ProfileManager extends BaseEntityManager implements ProfileManagerInterfac
     {
         $profile = $this->getRepository()->find($profile_id);
         $client = $this->getClientPool()->getClient('config');
-        $client->configure($profile->getParsedConfig());
+
+        $client->configure(new Link(), $profile->getParsedConfig());
 
         $links = $this->getHandler()->handleIndex($client, $persist);
 
-        /* if ($persist) { */
-        $profile->setLinks($links);
-        $this->getObjectManager()->flush();
-        /* } */
+        if (!empty($links) && $persist) {
+            $profile->setLinks($links);
+            $this->getObjectManager()->flush();
+        }
 
         return $links;
     }
