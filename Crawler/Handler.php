@@ -37,9 +37,9 @@ class Handler extends BaseHandler implements HandlerInterface
                 if ($persist) {
                     $this->getEntityManager()->persist($link);
                 }
-
-                $links[] = $link;
             }
+
+            $links[] = $link;
         }
 
 
