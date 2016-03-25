@@ -126,7 +126,7 @@ class CrawledAdmin extends Admin
 
         $listMapper
             ->add('custom', 'string', array(
-                'template' => 'NzCrawlerBundle:Admin:list__crawled_identifier.html.twig',
+                'template' => 'NzCrawlerBundle:CRUD:list__crawled_identifier.html.twig',
             ))
             /* ->addIdentifier('title', null, array()) */
             ->add('enabled', null, array('editable' => true))

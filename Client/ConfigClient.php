@@ -48,7 +48,7 @@ class ConfigClient extends BaseClient
     {
         $url = str_replace('%baseurl%', $this->baseurl, $this->next_page_mask);
         $url = str_replace('%current_page%', $current_page, $url);
-        /* dd($url); */
+
         return $url;
     }
 
@@ -57,7 +57,7 @@ class ConfigClient extends BaseClient
         $value = $entity_crawler->filter($selector);
 
         if ($value->count() === 0) {
-            return false;
+            /* return false; @note: medias return 0 */
         }
 
         switch ($modifier) {
@@ -157,11 +157,11 @@ class ConfigClient extends BaseClient
 
                 $this->getLink()->setNote(sprintf('empty_field_%', $key), (string) 'none');
             } else {
-                /* dd($value); */
+
                 $this->setItem($key, $value);
             }
         }
-         /*dd($this->getItems()); */
+        /* dd($this->getItems()); */
         /*
           foreach ($this->config['filters'] as $key => $item) {
           $this->setItem($item[0], $this->applyItemFilters($this->getItem($key), $item[1], $item[2]));
