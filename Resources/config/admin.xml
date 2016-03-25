@@ -20,11 +20,6 @@
             <argument />
             <argument>%nz.crawler.manager.link.entity%</argument>
             <argument>%nz.crawler.admin.link.controller%</argument>
-            <!--
-            <call method="setLinkManager">
-                <argument type="service" id="nz.crawler.manager.link" />
-            </call>
-            -->
 
             <call method="setTranslationDomain">
                 <argument>%nz.crawler.admin.translation_domain%</argument>
@@ -78,6 +73,17 @@
             
             <call method="setFormBuilder">
                 <argument type="service" id="form.factory" />
+            </call>
+        </service>
+        
+        <service id="nz.crawler.admin.crawled" class="Nz\CrawlerBundle\Admin\CrawledAdmin">
+            <tag name="sonata.admin" manager_type="orm" group="nz_crawler" label="crawled" label_catalogue="%nz.crawler.admin.translation_domain%" label_translator_strategy="sonata.admin.label.strategy.underscore" />
+            <argument />
+            <argument>Nz\CrawlerBundle\Entity\Crawled</argument>
+            <argument>SonataAdminBundle:CRUD</argument>
+
+            <call method="setTranslationDomain">
+                <argument>%nz.crawler.admin.translation_domain%</argument>
             </call>
         </service>
         

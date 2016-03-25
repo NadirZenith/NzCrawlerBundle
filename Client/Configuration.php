@@ -46,6 +46,7 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('start_page')->info('..')->cannotBeEmpty()->end()
                         ->scalarNode('limit_pages')->info('..')->cannotBeEmpty()->end()
                         ->scalarNode('next_page_mask')->info('..')->cannotBeEmpty()->end()
+                        ->scalarNode('next_page_mask')->info('..')->defaultValue(false)->end()
                         //->scalarNode()->info('..')->cannotBeEmpty()->end()
                         //->append($this->addFieldsMappingNode('fields'))
                         ->arrayNode('strings_to_filter')

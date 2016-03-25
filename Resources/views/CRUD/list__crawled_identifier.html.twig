@@ -1,0 +1,37 @@
+
+{% extends 'SonataAdminBundle:CRUD:base_list_field.html.twig' %}
+
+{% block field %}
+    <div class="col-sm-2">
+        {% if object.image and admin.isGranted('VIEW', object.image) %}
+            {% if admin.isGranted('EDIT', object) and admin.hasRoute('edit') %}
+                <a href="{{ admin.generateUrl('edit', {'id' : object|sonata_urlsafeid }) }}">
+                    <img src="{%path object.image, 'admin'%}" />
+                </a>
+                {#{% thumbnail object.image, 'admin' with {'width': 90} %}#}
+
+            {% endif %}
+
+        {% else %}
+            <i class="fa fa-chain-broken fa-3x"></i>
+        {% endif %}
+    </div>
+    <div class="col-sm-10">
+        <a href="{{ admin.generateUrl('edit', {'id' : object|sonata_urlsafeid }) }}">
+            {{object.title}}
+            {% if object.gallery %}
+                <div class="row object-gallery">
+                    {% for galMedia in object.gallery.galleryHasMedias|slice(0, 3) %}
+                        <div class="col-md-2">
+                            {% thumbnail galMedia.media, 'admin' with {'class': 'img-responsive'} %}
+                        </div>
+                    {% endfor %}
+                    <div class="col-md-2">
+                        {{object.gallery.galleryHasMedias|slice(3)|length}} +
+                    </div>
+                </div>
+            {% endif %}
+        </a>
+    </div>
+
+{% endblock %}
