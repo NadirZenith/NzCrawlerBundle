@@ -45,29 +45,22 @@ class LinkRepository extends EntityRepository
 
         return $query->execute();
     }
-    public function findProfileLinksForProcess($profile_id, $limit)
+
+    public function findProfileLinksForProcess($profile_id, $limit = 10)
     {
         $qb = $this->createQueryBuilder('l');
 
-        $qb
+        $qb = $qb
             ->select('l')
-            ->where('l.processed = false')
+            ->where('l.profile = :profile_id')
+            ->setParameter('profile_id', $profile_id)
+            ->andWhere('l.processed = false')
             ->andWhere('l.error = false')
             ->andWhere('l.skip = false')
-            ->andWhere('l.profile = :profile_id')
-            ->setParameter('profile_id', $profile_id)
-        ;
-
-        if ($limit) {
-            $qb
-                ->setMaxResults($limit)
-            ;
-        }
-
-        $query = $qb
             ->getQuery()
+            ->setMaxResults($limit);
         ;
 
-        return $query->execute();
+        return $qb->execute();
     }
 }

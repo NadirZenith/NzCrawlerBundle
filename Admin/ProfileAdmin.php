@@ -235,8 +235,16 @@ class ProfileAdmin extends Admin
      */
     public function validate(ErrorElement $errorElement, $profile)
     {
+        $config = $profile->getConfig();
+        
+        if(!$config){
+            $errorElement->addViolation(sprintf('Empty Config!'));
+            return ;
+        }
+        
         try {
-            $this->parseConfig($profile->getConfig());
+            /*dd($profile);*/
+            $this->parseConfig($config);
         } catch (ParseException $ex) {
 
             $errorElement->addViolation(sprintf('Invalid YML: %s ', $ex->getMessage()));

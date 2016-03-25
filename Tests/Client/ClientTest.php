@@ -72,9 +72,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($client->getNextPageUrl(1), 'http://www.example.com/page/1');
         $this->assertEquals($client->getNextPageUrl(2), 'http://www.example.com/page/2');
 
-        /*include 'nzdebug.php';*/
         $urls = $client->getIndexUrls();
-        /*d($urls);*/
         $this->assertNotEmpty($urls);
         $this->assertEquals($urls, array(
             'http://www.example.com/link1' => 'Title 1',

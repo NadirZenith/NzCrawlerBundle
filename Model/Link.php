@@ -173,7 +173,7 @@ abstract class Link implements LinkInterface
      */
     public function setItems(array $items = array())
     {
-        $this->items = $items;
+        $this->items = serialize($items);
     }
 
     /**
@@ -181,7 +181,13 @@ abstract class Link implements LinkInterface
      */
     public function getItems()
     {
-        return $this->items;
+        try {
+
+            return unserialize($this->items);
+        } catch (\Exception $ex) {
+            $this->setNote('invalid_items', $ex);
+            return [];
+        }
     }
 
     /**
@@ -222,6 +228,12 @@ abstract class Link implements LinkInterface
 
     public function __toString()
     {
-        return isset($this->name) ? $this->name : $this->url;
+        return !empty($this->name) ? $this->name : $this->url;
     }
+    /*
+      public function validateItems(){
+      d($this->url);
+      d(unserialize($this->items));
+      }
+     */
 }

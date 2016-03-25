@@ -6,6 +6,8 @@ use Sonata\CoreBundle\Model\BaseEntityManager;
 use Nz\CrawlerBundle\Model\ProfileManagerInterface;
 use Nz\CrawlerBundle\Client\ClientPool;
 use Nz\CrawlerBundle\Crawler\HandlerInterface;
+use Nz\CrawlerBundle\Model\LinkInterface;
+use Nz\CrawlerBundle\Model\ProfileInterface;
 
 class ProfileManager extends BaseEntityManager implements ProfileManagerInterface
 {
@@ -30,17 +32,14 @@ class ProfileManager extends BaseEntityManager implements ProfileManagerInterfac
         return $links;
     }
 
-    public function handleProfileLinks($profile_id, $persist = false)
+    public function handleProfileLinks(ProfileInterface $profile, $persist = false)
     {
-        $profile = $this->getRepository()->find($profile_id);
-        $links = $this->getRepository()->findProfileLinks($profile_id);
-
+        $links = $this->getLinkManager()->getRepository()->findProfileLinksForProcess($profile->getId(), 5);
         $client = $this->getClientPool()->getClient('config');
-        $client->configure($profile->getParsedConfig());
+        $client->configure(new Link(), $profile->getParsedConfig());
 
         $entities = $this->getHandler()->handleLinks($client, $links, $persist);
-
-        if ($persist) {
+        if (!empty($entities) && $persist) {
             $this->getObjectManager()->flush();
         }
 

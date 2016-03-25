@@ -48,13 +48,17 @@ class ConfigClient extends BaseClient
     {
         $url = str_replace('%baseurl%', $this->baseurl, $this->next_page_mask);
         $url = str_replace('%current_page%', $current_page, $url);
-
+        /* dd($url); */
         return $url;
     }
 
     private function getCrawlerValue(Crawler $entity_crawler, $selector, $modifier = 'text', $options = array())
     {
         $value = $entity_crawler->filter($selector);
+
+        if ($value->count() === 0) {
+            return false;
+        }
 
         switch ($modifier) {
             case "text":
@@ -148,8 +152,16 @@ class ConfigClient extends BaseClient
         foreach ($this->config['items'] as $key => $item) {
 
             $value = $this->getCrawlerValue($entity_crawler, $item[0], $item[1], $item[2]);
-            $this->setItem($key, $value);
+
+            if (!$value) {
+
+                $this->getLink()->setNote(sprintf('empty_field_%', $key), (string) 'none');
+            } else {
+                /* dd($value); */
+                $this->setItem($key, $value);
+            }
         }
+         /*dd($this->getItems()); */
         /*
           foreach ($this->config['filters'] as $key => $item) {
           $this->setItem($item[0], $this->applyItemFilters($this->getItem($key), $item[1], $item[2]));
@@ -196,24 +208,27 @@ class ConfigClient extends BaseClient
 
                 break;
             case "wrap":
-                $mask = isset($options['mask']) ? $options['mask'] : '<p>%s</p>';
+                if (is_array($value)) {
+                    $mask = isset($options['mask']) ? $options['mask'] : '<p>%s</p>';
 
-                $content = '';
-                foreach ($value as $val) {
-                    $content .= sprintf($mask, $val);
+                    $content = '';
+                    foreach ($value as $val) {
+                        $content .= sprintf($mask, $val);
+                    }
+                    $value = $content;
                 }
-
-                $value = $content;
 
                 break;
             case "excerpt":
-                $length = isset($options['length']) ? (int) $options['length'] : 100;
+                if (is_array($value)) {
+                    $length = isset($options['length']) ? (int) $options['length'] : 100;
 
-                $content = '';
-                foreach ($value as $val) {
-                    $content .= $val;
+                    $content = '';
+                    foreach ($value as $val) {
+                        $content .= $val;
+                    }
+                    $value = substr($content, 0, $length);
                 }
-                $value = substr($content, 0, $length);
 
                 break;
             case "image":

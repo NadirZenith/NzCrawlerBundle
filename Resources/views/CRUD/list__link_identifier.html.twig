@@ -1,20 +1,19 @@
-{#
-
-This file is part of the Sonata package.
-
-(c) Thomas Rabaix <thomas.rabaix@sonata-project.org>
-
-For the full copyright and license information, please view the LICENSE
-file that was distributed with this source code.
-
-#}
 
 {% extends 'SonataAdminBundle:CRUD:base_list_field.html.twig' %}
 
 {% block field %}
 
     <div class="col-sm-12">
-        <a href="{{ admin.generateUrl('edit', {'id' : object|sonata_urlsafeid }) }}"><strong>{{ object }}</strong></a>
+        <a href="{{ admin.generateUrl('edit', {'id' : object|sonata_urlsafeid }) }}">
+            <strong>
+                    {{ object }}
+            </strong>
+        </a>
+        {#<small>{{ object.url }}</small>#}
+        <br>
+        <a class="btn-sm" href="{{ admin.generateObjectUrl('crawl-link', object) }}">crawl</a>
+        <a class="btn-sm" href="{{ object.url }}" target="_blank">see</a>
+        <a class="btn-sm" href="{{ admin.generateObjectUrl('show', object) }}">show</a>
         <br>
 
         {% if object.items %}
@@ -47,7 +46,7 @@ file that was distributed with this source code.
                                             {% endif %}
 
                                         {% else %}
-                                            {{i}}
+                                            <p>{{i}}</p>
                                         {% endif %}
                                     {% endfor %}
                                 </div>

@@ -61,8 +61,7 @@ class LinkController extends Controller
             //dynamic client from profile
             $profile = $this->admin->getParent()->getSubject();
             $client = $clientPool->getClient('config');
-            $client->configure($profile->getParsedConfig());
-            $client->setLink($link);
+            $client->configure($link, $profile->getParsedConfig());
         } else {
             //system client
             $client = $clientPool->getClientForLink($link);
@@ -76,11 +75,11 @@ class LinkController extends Controller
         $entity = $handler->handleLink($client, $persist);
         if ($entity) {
 
-            $this->addFlashMessage(['Success' => [$entity]]);
+            $this->addFlash('sonata_flash_success', sprintf('Success: %s:%d', $entity, $entity->getId()));
         } else {
-
-            $this->addFlashMessage(['Success' => []], ['Errors' => $handler->getErrors()]);
+            $this->addFlash('sonata_flash_error', sprintf('Error: %s', implode('', $handler->getErrors())));
         }
+        
         return new RedirectResponse($this->admin->generateUrl('list'));
     }
 

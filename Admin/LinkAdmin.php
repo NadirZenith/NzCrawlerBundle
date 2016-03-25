@@ -132,14 +132,15 @@ class LinkAdmin extends Admin
             ->add('processed', null)
             ->add('error', null, array('editable' => true))
             ->add('skip', null, array('editable' => true))
-            /*       custom actions     */
-            ->add('_action', 'crawl', array(
-                'actions' => array(
-                    'Crawl' => array(
-                        'template' => 'NzCrawlerBundle:CRUD:list__link_action.html.twig'
-                    )
-                )
-            ))
+        /*       custom actions     
+          ->add('_action', 'crawl', array(
+          'actions' => array(
+          'Crawl' => array(
+          'template' => 'NzCrawlerBundle:CRUD:list__link_action.html.twig'
+          )
+          )
+          ))
+         */
 
         ;
     }

@@ -27,9 +27,11 @@ class ProfileController extends Controller
         $manager = $this->admin->getProfileManager();
 
         $links = $manager->handleProfileIndex($profile->getId(), $persist);
-
         $errors = $manager->getLastHandlerErrors();
-        $this->addFlashMessage(['Success' => $links], ['Errors' => $errors]);
+
+        $this->addFlash('sonata_flash_success', sprintf('<b>Success:</b> %d <br>',  max( count($links) - count($errors), 0)  ));
+        $this->addFlash('sonata_flash_info', sprintf('<b>Links:</b> %d <br>%s', count($links), implode('<br>', $links)));
+        $this->addFlash('sonata_flash_error', sprintf('<b>Errors:</b> %d <br>%s', count($errors), implode('<br>->', $errors)));
 
         return new RedirectResponse($this->admin->generateUrl('edit', array('id' => $id)));
     }
@@ -40,9 +42,12 @@ class ProfileController extends Controller
         $profile = $this->admin->getSubject();
         $persist = $request->get('persist', false);
 
-        $entities = $manager->handleProfileLinks($profile->getId(), $persist);
+        $entities = $manager->handleProfileLinks($profile, $persist);
         $errors = $manager->getLastHandlerErrors();
-        $this->addFlashMessage(['success' => $entities], ['errors' => $errors]);
+
+        $this->addFlash('sonata_flash_success', sprintf('<b>Success:</b> %d <br>', max( count($entities) - count($errors), 0)  ));
+        $this->addFlash('sonata_flash_info', sprintf('<b>Entities:</b> %d <br>%s', count($entities), implode('<br>', $entities)));
+        $this->addFlash('sonata_flash_error', sprintf('<b>Errors:</b> %d <br>%s', count($errors), implode('<br>-> ', $errors)));
 
         return new RedirectResponse($this->admin->generateUrl('nz.crawler.admin.link.list', array('id' => $id)));
     }
@@ -60,29 +65,6 @@ class ProfileController extends Controller
         die('crawl all profiles entities');
     }
 
-    public function addFlashMessage($success, $info = array(), $errors = array())
-    {
-        $key = is_null(key($success)) ? 'Success' : key($success);
-        $success = is_int(key($success)) ? $success : $success[$key];
-        $this->addFlash('sonata_flash_success', sprintf('<b>%s:</b> %d <br>%s', $key, count($success), implode('<br>', $success)));
-
-        if (!empty($info)) {
-            $key = is_int(key($info)) ? 'Info' : key($info);
-            $info = is_int(key($info)) ? $info : $info[$key];
-            $this->addFlash('sonata_flash_info', sprintf('<b>%s:</b> %d <br>%s', $key, count($info), implode('<br>->', $info)));
-        }
-
-        if (!empty($errors)) {
-            /* dd($errors); */
-            $key = is_null(key($errors)) ? 'Errors' : key($errors);
-            $values = is_null(key($errors)) ? $errors : $errors[$key];
-            $e = [];
-            foreach ($values as $error) {
-                $e[] = $error->getMessage();
-            }
-            $this->addFlash('sonata_flash_error', sprintf('<b>%s:</b> %d <br>%s', $key, count($values), implode('<br>->', $e)));
-        }
-    }
 
     public function crawlUrlsAction($id, Request $request = null)
     {

@@ -193,7 +193,6 @@ abstract class BaseClient implements ClientInterface
      */
     protected function getBaseCrawler($url)
     {
-        /* d($url); */
         $crawler = $this->crawl($url);
 
         $parseurl = parse_url($url);
@@ -566,6 +565,10 @@ abstract class BaseClient implements ClientInterface
             $this->next_page_link : //
             $this->getNextPageUrl($this->start_page);
 
+        if (!$nextUrl) {
+            throw new ClientException(sprintf('Invalid url page %s', $nextUrl));
+        }
+
         $this->start_page ++;
         $this->current_page ++;
         $crawler = $this->getBaseCrawler($nextUrl);
@@ -606,10 +609,11 @@ abstract class BaseClient implements ClientInterface
         $urls = $this->filterContent($urls);
         $new_urls = [];
         foreach ($urls as $url => $title) {
+            $parsed = parse_url($url);
             //if relative url prepend domain
-            $url = (FALSE === strpos($url, $this->getHost())) ?
-                $url = rtrim($this->getHost(), '/') . $url :
-                $url;
+            if (!isset($parsed['host'])) {
+                $url = rtrim($this->getHost(), '/') . '/' . trim($url, '/');
+            }
 
             $new_urls[$url] = $title;
         }

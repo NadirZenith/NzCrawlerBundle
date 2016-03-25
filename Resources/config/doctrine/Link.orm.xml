@@ -5,7 +5,13 @@
         name="Nz\CrawlerBundle\Entity\Link"
         table="nz__crawler_link"
         repository-class="Nz\CrawlerBundle\Entity\LinkRepository">
-
+        <!--
+        <options>
+            <option name="charset">utf8mb4</option>
+            <option name="collate">utf8mb4_unicode_ci</option>
+        </options>
+        -->
+        
         <unique-constraints>
             <unique-constraint columns="crawled_url,profile_id" name="profile_link_idx" />
         </unique-constraints>
@@ -26,21 +32,29 @@
         
         <field name="notes"         type="array"      column="note"           nullable="true"  />
         
-        <field name="items"         type="array"      column="items"          nullable="true"  />
+        <field name="items"         type="text"       column="items"          nullable="true"  />
 
         <field name="crawledAt"     type="datetime"   column="crawled_at" />
         
+            <!--column="profile_id" -->
         <many-to-one
             field="profile"
-            column="profile_id" 
             target-entity="Nz\CrawlerBundle\Entity\Profile"
+            inversed-by="links"
         >
+            <join-column name="profile_id" referenced-column-name="id" />
             <!--            
             <cascade>
                 <cascade-persist/>
             </cascade>
             -->
         </many-to-one>
+        <!--        
+        <lifecycle-callbacks>
+            <lifecycle-callback type="prePersist" method="validateItems"/>
+            <lifecycle-callback type="preUpdate" method="validateItems"/>
+        </lifecycle-callbacks>
+        -->
 
     </entity>
     

@@ -68,11 +68,13 @@ class MediaMatcher
             $temp_file = false;
 
             if ($med['provider'] === 'sonata.media.provider.image') {
-
                 $ext = pathinfo($med['url'], PATHINFO_EXTENSION);
                 $temp_file = rtrim(sys_get_temp_dir(), '/') . '/' . uniqid() . '.' . $ext;
-                $file_content = file_get_contents($med['url']);
-                file_put_contents($temp_file, $file_content);
+                $this->copyRemote($med['url'], $temp_file);
+
+                /* $file_content = file_get_contents($med['url']); */
+                /* file_put_contents($temp_file, $file_content); */
+
                 $media->setBinaryContent($temp_file);
             } else {
 
@@ -234,5 +236,21 @@ class MediaMatcher
         }
         // not an image
         return false;
+    }
+
+    private function copyRemote($fromUrl, $toFile)
+    {
+        try {
+            $client = new \Guzzle\Http\Client();
+            $response = $client->get($fromUrl)
+                //->setAuth('login', 'password') // in case your resource is under protection
+                ->setResponseBody($toFile)
+                ->send();
+
+            return true;
+        } catch (Exception $e) {
+            // Log the error or something
+            return false;
+        }
     }
 }

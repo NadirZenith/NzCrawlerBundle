@@ -6,7 +6,7 @@
     {%set config = object.parsedConfig%}
     {% if config.logo_url is defined and config.logo_url %}
         <div class="col-sm-4">
-            <img src={{config.logo_url}}>
+            <img src="{{config.logo_url}}" style="max-width: 130px">
         </div>
     {% endif %}
     <div class="col-sm-8">

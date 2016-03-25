@@ -51,11 +51,19 @@ class Handler extends BaseHandler implements HandlerInterface
      */
     public function handleIndex(ClientInterface $client, $persist = false)
     {
-        $links = $this->urlsToLinks($client->getIndexUrls(), $persist);
 
-        if ($persist) {
-            $this->getEntityManager()->flush();
+        try {
+
+            $links = $this->urlsToLinks($client->getIndexUrls(), $persist);
+
+            if ($persist) {
+                $this->getEntityManager()->flush();
+            }
+        } catch (\Exception $ex) {
+            $links = array();
+            $this->errors[] = $ex;
         }
+
 
         return $links;
     }
@@ -112,7 +120,9 @@ class Handler extends BaseHandler implements HandlerInterface
 
             $link->setSkip(false);
             $link->setError(false);
-            $this->persistLink($link);
+            if ($link->getId() !== NULL || $persist) {
+                $this->persistLink($link);
+            }
 
             return $entity;
         } catch (UniqueConstraintViolationException $ex) {
@@ -134,7 +144,9 @@ class Handler extends BaseHandler implements HandlerInterface
 
         $this->errors[] = $ex;
         $link->setError(true);
-        $this->persistLink($link);
+        if ($persist) {
+            $this->persistLink($link);
+        }
 
         return false;
     }

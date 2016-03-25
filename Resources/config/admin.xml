@@ -20,10 +20,11 @@
             <argument />
             <argument>%nz.crawler.manager.link.entity%</argument>
             <argument>%nz.crawler.admin.link.controller%</argument>
-
+            <!--
             <call method="setLinkManager">
                 <argument type="service" id="nz.crawler.manager.link" />
             </call>
+            -->
 
             <call method="setTranslationDomain">
                 <argument>%nz.crawler.admin.translation_domain%</argument>
